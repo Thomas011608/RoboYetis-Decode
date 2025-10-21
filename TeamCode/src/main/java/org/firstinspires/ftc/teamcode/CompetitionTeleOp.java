@@ -4,8 +4,11 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -20,14 +23,40 @@ public class CompetitionTeleOp extends LinearOpMode {
     private DcMotor backLeftDrive = null;
     private DcMotor frontRightDrive = null;
     private DcMotor backRightDrive = null;
-    private DcMotor greenLauncher = null;
-    private DcMotor purpleLauncher = null;
-    private Servo greenFeeder = null;
-    private Servo purpleFeeder = null;
-    private Servo purpleFeeder2 = null;
+    private DcMotorEx greenLauncher = null;
+    private DcMotorEx purpleLauncher = null;
+    private CRServo greenFeeder = null;
+    private CRServo purpleFeeder = null;
+    private CRServo purpleFeeder2 = null;
+
+
+    ElapsedTime feederTimer = new ElapsedTime();
+    final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
+    final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
+    final double FULL_SPEED = 1.0;
+    final double LAUNCHER_TARGET_VELOCITY = 1125;
+    final double LAUNCHER_MIN_VELOCITY = 1075;
+    private enum LaunchStateGreen {
+        IDLE_GREEN,
+        SPIN_UP_GREEN,
+        LAUNCH_GREEN,
+        LAUNCHING_GREEN,
+    }
+    private enum LaunchStatePurple {
+        IDLE_PURPLE,
+        SPIN_UP_PURPLE,
+        LAUNCH_PURPLE,
+        LAUNCHING_PURPLE,
+    }
+
+    private LaunchStateGreen launchStateGreen;
+    private LaunchStatePurple launchStatePurple;
 
     @Override
     public void runOpMode() {
+        launchStatePurple = LaunchStatePurple.IDLE_PURPLE;
+        launchStateGreen = LaunchStateGreen.IDLE_GREEN;
+
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
@@ -37,13 +66,16 @@ public class CompetitionTeleOp extends LinearOpMode {
         backRightDrive = hardwareMap.get(DcMotor.class, "back_right_drive");
 
         // initialize launcher hardware variables
-        greenLauncher = hardwareMap.get(DcMotor.class,"green_launcher");
-        purpleLauncher = hardwareMap.get(DcMotor.class,"purple_launcher");
+        greenLauncher = hardwareMap.get(DcMotorEx.class,"green_launcher");
+        purpleLauncher = hardwareMap.get(DcMotorEx.class,"purple_launcher");
 
         //Initialize servo hardware variables
-        greenFeeder = hardwareMap.get(Servo.class,"green_feeder");
-        purpleFeeder = hardwareMap.get(Servo.class,"purple_feeder");
-        purpleFeeder2 = hardwareMap.get(Servo.class,"purple_feeder_two");
+        greenFeeder = hardwareMap.get(CRServo.class,"green_feeder");
+        purpleFeeder = hardwareMap.get(CRServo.class,"purple_feeder");
+        purpleFeeder2 = hardwareMap.get(CRServo.class,"purple_feeder_two");
+        greenFeeder.setPower(STOP_SPEED);
+        purpleFeeder.setPower(STOP_SPEED);
+        purpleFeeder2.setPower(STOP_SPEED);
 
         //Set Driving Direction
         frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -54,6 +86,12 @@ public class CompetitionTeleOp extends LinearOpMode {
         //Set Launcher Direction
         greenLauncher.setDirection(DcMotor.Direction.FORWARD);
         purpleLauncher.setDirection(DcMotor.Direction.REVERSE);
+
+        greenLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        purpleLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        greenLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
+        purpleLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
 
         //Set Driving Zero Power Behavior
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -101,22 +139,7 @@ public class CompetitionTeleOp extends LinearOpMode {
                 backRightPower /= max;
             }
 
-            // This is test code:
-            //
-            // Uncomment the following code to test your motor directions.
-            // Each button should make the corresponding motor run FORWARD.
-            //   1) First get all the motors to take to correct positions on the robot
-            //      by adjusting your Robot Configuration if necessary.
-            //   2) Then make sure they run in the correct direction by modifying the
-            //      the setDirection() calls above.
-            // Once the correct motors move in the correct direction re-comment this code.
 
-            /*
-            frontLeftPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
-            backLeftPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
-            frontRightPower = gamepad1.y ? 1.0 : 0.0;  // Y gamepad
-            backRightPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
-            */
 
             // Send calculated power to wheels
             frontLeftDrive.setPower(frontLeftPower);
@@ -124,9 +147,84 @@ public class CompetitionTeleOp extends LinearOpMode {
             backLeftDrive.setPower(backLeftPower);
             backRightDrive.setPower(backRightPower);
 
+
+            if (gamepad1.y) {
+                greenLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+            } else if (gamepad1.b) { // stop flywheel
+                greenLauncher.setVelocity(STOP_SPEED);
+            }
+            if (gamepad1.a) {
+                purpleLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+            } else if (gamepad1.x) { // stop flywheel
+                purpleLauncher.setVelocity(STOP_SPEED);
+            }
+
+            launchPurple(gamepad1.leftBumperWasPressed());
+            launchGreen(gamepad1.rightBumperWasPressed());
+
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
+
+            telemetry.addData("State", launchStatePurple);
+            telemetry.addData("motorSpeed", purpleLauncher.getVelocity());
+            telemetry.addData("State", launchStateGreen);
+            telemetry.addData("motorSpeed", greenLauncher.getVelocity());
+
             telemetry.update();
+        }
+    }
+    void launchPurple(boolean shotRequested) {
+        switch (launchStatePurple) {
+            case IDLE_PURPLE:
+                if (shotRequested) {
+                    launchStatePurple = LaunchStatePurple.SPIN_UP_PURPLE;
+                }
+                break;
+            case SPIN_UP_PURPLE:
+                purpleLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                if (purpleLauncher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+                    launchStatePurple = LaunchStatePurple.LAUNCH_PURPLE;
+                }
+                break;
+            case LAUNCH_PURPLE:
+                purpleFeeder.setPower(FULL_SPEED);
+                purpleFeeder2.setPower(FULL_SPEED);
+                feederTimer.reset();
+                launchStatePurple = LaunchStatePurple.LAUNCHING_PURPLE;
+                break;
+            case LAUNCHING_PURPLE:
+                if (feederTimer.seconds() > FEED_TIME_SECONDS) {
+                    launchStatePurple = LaunchStatePurple.IDLE_PURPLE;
+                    purpleFeeder.setPower(STOP_SPEED);
+                    purpleFeeder2.setPower(STOP_SPEED);
+                }
+                break;
+        }
+    }
+    void launchGreen(boolean shotRequested) {
+        switch (launchStateGreen) {
+            case IDLE_GREEN:
+                if (shotRequested) {
+                    launchStateGreen = LaunchStateGreen.SPIN_UP_GREEN;
+                }
+                break;
+            case SPIN_UP_GREEN:
+                greenLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                if (greenLauncher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+                    launchStateGreen = LaunchStateGreen.LAUNCH_GREEN;
+                }
+                break;
+            case LAUNCH_GREEN:
+                greenFeeder.setPower(FULL_SPEED);
+                feederTimer.reset();
+                launchStateGreen = LaunchStateGreen.LAUNCHING_GREEN;
+                break;
+            case LAUNCHING_GREEN:
+                if (feederTimer.seconds() > FEED_TIME_SECONDS) {
+                    launchStateGreen = LaunchStateGreen.IDLE_GREEN;
+                    greenFeeder.setPower(STOP_SPEED);
+                }
+                break;
         }
     }
 }
