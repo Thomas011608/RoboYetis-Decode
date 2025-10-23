@@ -15,7 +15,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import java.text.Format;
 
 @TeleOp(name="Competition TeleOp", group="Linear OpMode")
-@Disabled
 public class CompetitionTeleOp extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
@@ -25,9 +24,12 @@ public class CompetitionTeleOp extends LinearOpMode {
     private DcMotor backRightDrive = null;
     private DcMotorEx greenLauncher = null;
     private DcMotorEx purpleLauncher = null;
-    private CRServo greenFeeder = null;
-    private CRServo purpleFeeder = null;
-    private CRServo purpleFeeder2 = null;
+    //private CRServo greenFeeder = null;
+    //private CRServo purpleFeeder = null;
+    //private CRServo purpleFeeder2 = null;
+    private Servo greenFeeder = null;
+    private Servo purpleFeeder = null;
+    private Servo purpleFeeder2 = null;
 
 
     ElapsedTime feederTimer = new ElapsedTime();
@@ -70,12 +72,18 @@ public class CompetitionTeleOp extends LinearOpMode {
         purpleLauncher = hardwareMap.get(DcMotorEx.class,"purple_launcher");
 
         //Initialize servo hardware variables
-        greenFeeder = hardwareMap.get(CRServo.class,"green_feeder");
+        /*greenFeeder = hardwareMap.get(CRServo.class,"green_feeder");
         purpleFeeder = hardwareMap.get(CRServo.class,"purple_feeder");
         purpleFeeder2 = hardwareMap.get(CRServo.class,"purple_feeder_two");
         greenFeeder.setPower(STOP_SPEED);
         purpleFeeder.setPower(STOP_SPEED);
-        purpleFeeder2.setPower(STOP_SPEED);
+        purpleFeeder2.setPower(STOP_SPEED);*/
+        greenFeeder = hardwareMap.get(Servo.class,"green_feeder");
+        purpleFeeder = hardwareMap.get(Servo.class,"purple_feeder");
+        purpleFeeder2 = hardwareMap.get(Servo.class,"purple_feeder_two");
+        greenFeeder.setPosition(STOP_SPEED);
+        purpleFeeder.setPosition(STOP_SPEED);
+        purpleFeeder2.setPosition(STOP_SPEED);
 
         //Set Driving Direction
         frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -84,8 +92,8 @@ public class CompetitionTeleOp extends LinearOpMode {
         backRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
         //Set Launcher Direction
-        greenLauncher.setDirection(DcMotor.Direction.FORWARD);
-        purpleLauncher.setDirection(DcMotor.Direction.REVERSE);
+        greenLauncher.setDirection(DcMotor.Direction.REVERSE);
+        purpleLauncher.setDirection(DcMotor.Direction.FORWARD);
 
         greenLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         purpleLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -187,16 +195,18 @@ public class CompetitionTeleOp extends LinearOpMode {
                 }
                 break;
             case LAUNCH_PURPLE:
-                purpleFeeder.setPower(FULL_SPEED);
-                purpleFeeder2.setPower(FULL_SPEED);
+                //purpleFeeder.setPower(FULL_SPEED);
+                //purpleFeeder2.setPower(FULL_SPEED);
+                purpleFeeder.setPosition(FULL_SPEED);
+                purpleFeeder2.setPosition(FULL_SPEED);
                 feederTimer.reset();
                 launchStatePurple = LaunchStatePurple.LAUNCHING_PURPLE;
                 break;
             case LAUNCHING_PURPLE:
                 if (feederTimer.seconds() > FEED_TIME_SECONDS) {
                     launchStatePurple = LaunchStatePurple.IDLE_PURPLE;
-                    purpleFeeder.setPower(STOP_SPEED);
-                    purpleFeeder2.setPower(STOP_SPEED);
+                    purpleFeeder.setPosition(STOP_SPEED);
+                    purpleFeeder2.setPosition(STOP_SPEED);
                 }
                 break;
         }
@@ -215,14 +225,16 @@ public class CompetitionTeleOp extends LinearOpMode {
                 }
                 break;
             case LAUNCH_GREEN:
-                greenFeeder.setPower(FULL_SPEED);
+                //greenFeeder.setPower(FULL_SPEED);
+                greenFeeder.setPosition(FULL_SPEED);
                 feederTimer.reset();
                 launchStateGreen = LaunchStateGreen.LAUNCHING_GREEN;
                 break;
             case LAUNCHING_GREEN:
                 if (feederTimer.seconds() > FEED_TIME_SECONDS) {
                     launchStateGreen = LaunchStateGreen.IDLE_GREEN;
-                    greenFeeder.setPower(STOP_SPEED);
+                    //greenFeeder.setPower(STOP_SPEED);
+                    greenFeeder.setPosition(STOP_SPEED);
                 }
                 break;
         }
