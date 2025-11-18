@@ -40,32 +40,28 @@ public class CompetitionTeleOp extends LinearOpMode {
     final double UP_POSITION = 0.2;
     final double STOP_SPEED = 0.0;
     final double MAX_SPEED = 2000;
-    final double LAUNCHER_TARGET_VELOCITY_FAST = 1150;
-    final double LAUNCHER_MIN_VELOCITY_FAST = 1100;
-    final double LAUNCHER_TARGET_VELOCITY_SLOW = 850;
-    final double LAUNCHER_MIN_VELOCITY_SLOW = 850;
+    final double LAUNCHER_TARGET_VELOCITY_FAST = 850;
+    final double LAUNCHER_MIN_VELOCITY_FAST = 800;
+    final double LAUNCHER_TARGET_VELOCITY_SLOW = 675;
+    final double LAUNCHER_MIN_VELOCITY_SLOW = 625;
     final double LAUNCHER_INTAKE_VELOCITY = -500;
-    final double DRIVING_SPEED_MULTIPLIER = 0.7;
-    private enum LaunchStateGreen {
-        IDLE_GREEN,
-        SPIN_UP_GREEN,
+    final double DRIVING_SPEED_MULTIPLIER = 1.0;
+    private enum LaunchState {
+        IDLE,
+        SPIN_UP_PURPLE_FAST,
+        SPIN_UP_PURPLE_SLOW,
+        LAUNCH_PURPLE,
+        SPIN_DOWN_PURPLE,
+        SPIN_UP_GREEN_FAST,
+        SPIN_UP_GREEN_SLOW,
         LAUNCH_GREEN,
         SPIN_DOWN_GREEN,
     }
-    private enum LaunchStatePurple {
-        IDLE_PURPLE,
-        SPIN_UP_PURPLE,
-        LAUNCH_PURPLE,
-        SPIN_DOWN_PURPLE,
-    }
-
-    private LaunchStateGreen launchStateGreen;
-    private LaunchStatePurple launchStatePurple;
+    private LaunchState launchState;
 
     @Override
     public void runOpMode() {
-        launchStatePurple = LaunchStatePurple.IDLE_PURPLE;
-        launchStateGreen = LaunchStateGreen.IDLE_GREEN;
+        launchState = LaunchState.IDLE;
 
 
         // Initialize the hardware variables. Note that the strings used here must correspond
@@ -108,8 +104,8 @@ public class CompetitionTeleOp extends LinearOpMode {
         greenLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         purpleLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        greenLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 10, 50));
-        purpleLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 10, 50));
+        greenLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 5, 10, 25));
+        purpleLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 5, 10, 25));
 
         //Set Driving Zero Power Behavior
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -198,16 +194,16 @@ public class CompetitionTeleOp extends LinearOpMode {
                 purpleLauncher.setVelocity(STOP_SPEED);
             }*/
 
-            if (gamepad1.x) {
+            /*if (gamepad2.x) {
                 greenLauncher.setVelocity(MAX_SPEED);
-            } else if (gamepad1.b) { // stop flywheel
+            } else if (gamepad2.b) { // stop flywheel
                 greenLauncher.setVelocity(STOP_SPEED);
             }
-            if (gamepad1.dpad_left) {
+            if (gamepad2.dpad_left) {
                 purpleLauncher.setVelocity(MAX_SPEED);
-            } else if (gamepad1.dpad_right) { // stop flywheel
+            } else if (gamepad2.dpad_right) { // stop flywheel
                 purpleLauncher.setVelocity(STOP_SPEED);
-            }
+            }*/
             /*if (gamepad1.dpad_left) {
                 greenLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY_SLOW);
             } else if (gamepad1.a) { // stop flywheel
@@ -219,16 +215,16 @@ public class CompetitionTeleOp extends LinearOpMode {
                 purpleLauncher.setVelocity(STOP_SPEED);
             }*/
 
-            if (gamepad1.y) {
+            /*if (gamepad2.y) {
                 greenFeeder.setPosition(DOWN_POSITION);
-            } else if (gamepad1.a) { // stop flywheel
+            } else if (gamepad2.a) { // stop flywheel
                 greenFeeder.setPosition(UP_POSITION);
             }
-            if (gamepad1.dpad_down) {
+            if (gamepad2.dpad_down) {
                 purpleFeeder.setPosition(DOWN_POSITION);
-            } else if (gamepad1.dpad_up) { // stop flywheel
+            } else if (gamepad2.dpad_up) { // stop flywheel
                 purpleFeeder.setPosition(UP_POSITION);
-            }
+            }*/
 
             if (gamepad2.leftBumperWasPressed()) {
                 purpleLauncher.setVelocity(LAUNCHER_INTAKE_VELOCITY);
@@ -241,145 +237,80 @@ public class CompetitionTeleOp extends LinearOpMode {
                 greenLauncher.setVelocity(STOP_SPEED);
             }
 
-            //launchPurpleSlow(gamepad2.xWasPressed(), LAUNCHER_TARGET_VELOCITY_SLOW, LAUNCHER_MIN_VELOCITY_SLOW);
-            //launchGreenSlow(gamepad2.bWasPressed(), LAUNCHER_TARGET_VELOCITY_SLOW, LAUNCHER_MIN_VELOCITY_SLOW);
-            //launchPurpleFast(gamepad2.dpadLeftWasPressed(), LAUNCHER_TARGET_VELOCITY_FAST, LAUNCHER_MIN_VELOCITY_FAST);
-            //launchGreenFast(gamepad2.dpadRightWasPressed(), LAUNCHER_TARGET_VELOCITY_FAST, LAUNCHER_MIN_VELOCITY_FAST);
+            launch(gamepad2.xWasPressed(), gamepad2.dpadLeftWasPressed(), gamepad2.bWasPressed(), gamepad2.dpadRightWasPressed());
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
 
-            telemetry.addData("State", launchStatePurple);
+            telemetry.addData("State", launchState);
             telemetry.addData("motorSpeed", purpleLauncher.getVelocity());
-            telemetry.addData("State", launchStateGreen);
             telemetry.addData("motorSpeed", greenLauncher.getVelocity());
 
             telemetry.update();
         }
     }
-    void launchPurpleSlow(boolean shotRequested, double launchSpeed, double launchMinVelocity) {
-        switch (launchStatePurple) {
-            case IDLE_PURPLE:
-                if (shotRequested) {
-                    launchTimer.reset();
-                    launchStatePurple = LaunchStatePurple.SPIN_UP_PURPLE;
+    void launch(boolean slowShotRequestedPurple, boolean fastShotRequestedPurple, boolean slowShotRequestedGreen, boolean fastShotRequestedGreen){
+        switch (launchState) {
+            case IDLE:
+                if (fastShotRequestedPurple) {
+                    launchState = LaunchState.SPIN_UP_PURPLE_FAST;
+                }
+                if (slowShotRequestedPurple) {
+                    launchState = LaunchState.SPIN_UP_PURPLE_SLOW;
+                }
+                if (fastShotRequestedGreen) {
+                    launchState = LaunchState.SPIN_UP_GREEN_FAST;
+                }
+                if (slowShotRequestedGreen) {
+                    launchState = LaunchState.SPIN_UP_GREEN_SLOW;
                 }
                 break;
-            case SPIN_UP_PURPLE:
-                purpleLauncher.setVelocity(launchSpeed);
-                if (purpleLauncher.getVelocity() > launchMinVelocity) {
-                    launchStatePurple = LaunchStatePurple.LAUNCH_PURPLE;
+            case SPIN_UP_PURPLE_FAST:
+                purpleLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY_FAST);
+                if (purpleLauncher.getVelocity() > LAUNCHER_MIN_VELOCITY_FAST) {
+                    launchState = LaunchState.LAUNCH_PURPLE;
                 }
-                /*while (purpleLauncher.getVelocity() < launchMinVelocity){
-                    purpleLauncher.setVelocity(launchSpeed);
+                break;
+            case SPIN_UP_PURPLE_SLOW:
+                purpleLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY_SLOW);
+                if (purpleLauncher.getVelocity() > LAUNCHER_MIN_VELOCITY_SLOW) {
+                    launchState = LaunchState.LAUNCH_PURPLE;
                 }
-                launchStatePurple = LaunchStatePurple.LAUNCH_PURPLE;*/
                 break;
             case LAUNCH_PURPLE:
-                //purpleFeeder.setPower(FULL_SPEED);
-                //purpleFeeder2.setPower(FULL_SPEED);
-                purpleFeeder.setPosition(DOWN_POSITION);
-                //purpleFeeder2.setPosition(FULL_SPEED);
-                feederTimer.reset();
-                launchStatePurple = LaunchStatePurple.SPIN_DOWN_PURPLE;
-                break;
-            case SPIN_DOWN_PURPLE:
-                if (feederTimer.seconds() > FEED_TIME_SECONDS) {
-                    purpleLauncher.setVelocity(STOP_SPEED);
-                    purpleFeeder.setPosition(DOWN_POSITION);
-                    launchStatePurple = LaunchStatePurple.IDLE_PURPLE;
-                }
-                break;
-        }
-    }
-    void launchGreenSlow(boolean shotRequested, double launchSpeed, double launchMinVelocity) {
-        switch (launchStateGreen) {
-            case IDLE_GREEN:
-                if (shotRequested) {
-                    launchStateGreen = LaunchStateGreen.SPIN_UP_GREEN;
-                }
-                break;
-            case SPIN_UP_GREEN:
-                greenLauncher.setVelocity(launchSpeed);
-                if (greenLauncher.getVelocity() > launchMinVelocity) {
-                    launchStateGreen = LaunchStateGreen.LAUNCH_GREEN;
-                }
-                break;
-            case LAUNCH_GREEN:
-                //greenFeeder.setPower(FULL_SPEED);
-                greenFeeder.setPosition(DOWN_POSITION);
-                feederTimer.reset();
-                launchStateGreen = LaunchStateGreen.SPIN_DOWN_GREEN;
-                break;
-            case SPIN_DOWN_GREEN:
-                if (feederTimer.seconds() > FEED_TIME_SECONDS) {
-                    greenLauncher.setVelocity(STOP_SPEED);
-                    greenFeeder.setPosition(UP_POSITION);
-                    launchStateGreen = LaunchStateGreen.IDLE_GREEN;
-                }
-                break;
-        }
-    }
-    void launchPurpleFast(boolean shotRequested, double launchSpeed, double launchMinVelocity) {
-        switch (launchStatePurple) {
-            case IDLE_PURPLE:
-                if (shotRequested) {
-                    launchStatePurple = LaunchStatePurple.SPIN_UP_PURPLE;
-                }
-                break;
-            case SPIN_UP_PURPLE:
-                purpleLauncher.setVelocity(launchSpeed);
-                if (purpleLauncher.getVelocity() > launchMinVelocity) {
-                    launchStatePurple = LaunchStatePurple.LAUNCH_PURPLE;
-                }
-                /*while (purpleLauncher.getVelocity() < launchMinVelocity){
-                    purpleLauncher.setVelocity(launchSpeed);
-                }*/
-                //launchStatePurple = LaunchStatePurple.LAUNCH_PURPLE;
-                break;
-            case LAUNCH_PURPLE:
-                //purpleFeeder.setPower(FULL_SPEED);
-                //purpleFeeder2.setPower(FULL_SPEED);
-                purpleLauncher.setVelocity(launchSpeed);
                 purpleFeeder.setPosition(UP_POSITION);
-                //purpleFeeder2.setPosition(FULL_SPEED);
                 feederTimer.reset();
-                launchStatePurple = LaunchStatePurple.SPIN_DOWN_PURPLE;
+                launchState = LaunchState.SPIN_DOWN_PURPLE;
                 break;
             case SPIN_DOWN_PURPLE:
-                purpleLauncher.setVelocity(launchSpeed);
                 if (feederTimer.seconds() > FEED_TIME_SECONDS) {
                     purpleLauncher.setVelocity(STOP_SPEED);
                     purpleFeeder.setPosition(DOWN_POSITION);
-                    launchStatePurple = LaunchStatePurple.IDLE_PURPLE;
+                    launchState = LaunchState.IDLE;
                 }
                 break;
-        }
-    }
-    void launchGreenFast(boolean shotRequested, double launchSpeed, double launchMinVelocity) {
-        switch (launchStateGreen) {
-            case IDLE_GREEN:
-                if (shotRequested) {
-                    launchStateGreen = LaunchStateGreen.SPIN_UP_GREEN;
+            case SPIN_UP_GREEN_FAST:
+                greenLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY_FAST);
+                if (greenLauncher.getVelocity() > LAUNCHER_MIN_VELOCITY_FAST) {
+                    launchState = LaunchState.LAUNCH_GREEN;
                 }
                 break;
-            case SPIN_UP_GREEN:
-                greenLauncher.setVelocity(launchSpeed);
-                if (greenLauncher.getVelocity() > launchMinVelocity) {
-                    launchStateGreen = LaunchStateGreen.LAUNCH_GREEN;
+            case SPIN_UP_GREEN_SLOW:
+                greenLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY_SLOW);
+                if (greenLauncher.getVelocity() > LAUNCHER_MIN_VELOCITY_SLOW) {
+                    launchState = LaunchState.LAUNCH_GREEN;
                 }
                 break;
             case LAUNCH_GREEN:
-                //greenFeeder.setPower(FULL_SPEED);
                 greenFeeder.setPosition(DOWN_POSITION);
                 feederTimer.reset();
-                launchStateGreen = LaunchStateGreen.SPIN_DOWN_GREEN;
+                launchState = LaunchState.SPIN_DOWN_GREEN;
                 break;
             case SPIN_DOWN_GREEN:
                 if (feederTimer.seconds() > FEED_TIME_SECONDS) {
                     greenLauncher.setVelocity(STOP_SPEED);
                     greenFeeder.setPosition(UP_POSITION);
-                    launchStateGreen = LaunchStateGreen.IDLE_GREEN;
+                    launchState = LaunchState.IDLE;
                 }
                 break;
         }
