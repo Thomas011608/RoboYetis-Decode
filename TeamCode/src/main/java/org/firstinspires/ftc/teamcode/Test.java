@@ -32,6 +32,9 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
@@ -40,13 +43,14 @@ public class Test extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor test = null;
+    private DcMotorEx test = null;
+    int targetVelocity = 100;
 
     @Override
     public void runOpMode() {
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
-        test = hardwareMap.get(DcMotor.class, "test");
+        test = hardwareMap.get(DcMotorEx.class, "test");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -58,8 +62,10 @@ public class Test extends LinearOpMode {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        test.setDirection(DcMotor.Direction.REVERSE);
+        test.setDirection(DcMotorEx.Direction.FORWARD);
 
+        test.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        test.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -72,13 +78,13 @@ public class Test extends LinearOpMode {
         while (opModeIsActive()) {
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-            double lateral =  gamepad1.left_stick_x;
-            double yaw     =  gamepad1.right_stick_x;
+            //double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
+            //double lateral =  gamepad1.left_stick_x;
+            //double yaw     =  gamepad1.right_stick_x;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
-            double testPower  = axial + lateral + yaw;
+            //double testPower  = axial + lateral + yaw;
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion
@@ -102,20 +108,36 @@ public class Test extends LinearOpMode {
             */
 
             // Send calculated power to wheels
-            test.setPower(testPower);
+            //test.setPower(testPower);
 
-            boolean testMax = gamepad1.x;
-            boolean testMin = gamepad1.y;
 
-            if (testMax){
-                test.setPower(1.0);
+
+            boolean testOn = gamepad1.x;
+            boolean testOff = gamepad1.y;
+
+
+
+            if (gamepad1.a){
+                targetVelocity += 1;
             }
-            if (testMin){
-                test.setPower(-1.0);
+            if (gamepad1.b){
+                targetVelocity -= 1;
+            }
+
+            if (testOn){
+                test.setVelocity(targetVelocity);
+            }
+            if (testOff){
+                test.setPower(0.0);
             }
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Target Velocity", targetVelocity);
+            telemetry.addData("Current Velocity", test.getVelocity());
             telemetry.update();
         }
     }}
+
+
+
