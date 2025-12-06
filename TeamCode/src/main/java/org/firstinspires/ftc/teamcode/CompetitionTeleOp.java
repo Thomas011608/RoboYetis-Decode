@@ -59,7 +59,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         launchState = LaunchState.IDLE;
         intakeState = IntakeState.IDLE;
 
-        // TODO: Driving Motor Definitions
+        // HEADER: Driving Motor Definitions
         frontLeftDrive = hardwareMap.get(DcMotor.class, "front_left_drive");
         backLeftDrive = hardwareMap.get(DcMotor.class, "back_left_drive");
         frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
@@ -75,7 +75,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // TODO: Launcher Motor Definitions
+        // HEADER: Launcher Motor Definitions
         launcher = hardwareMap.get(DcMotorEx.class,"launcher");
         //Set Launcher Direction
         launcher.setDirection(DcMotor.Direction.FORWARD);
@@ -84,7 +84,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         //Set Launcher Zero Power Behavior
         launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // TODO: Feeder Servo Definitions
+        // HEADER: Feeder Servo Definitions
         greenFeeder = hardwareMap.get(CRServo.class,"green_feeder");
         purpleFeeder = hardwareMap.get(CRServo.class,"purple_feeder");
         greenFeeder.setPower(STOP_SPEED);
@@ -93,7 +93,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         greenFeeder.setDirection(CRServo.Direction.FORWARD);
         purpleFeeder.setDirection(CRServo.Direction.REVERSE);
 
-        // TODO: Intake Motor Definitions
+        // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class,"intake");
         intake.setDirection(DcMotor.Direction.FORWARD);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
