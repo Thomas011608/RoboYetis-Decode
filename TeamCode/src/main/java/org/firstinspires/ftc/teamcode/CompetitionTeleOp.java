@@ -39,16 +39,16 @@ public class CompetitionTeleOp extends LinearOpMode {
     ElapsedTime sortTimer = new ElapsedTime();
     final double INTAKE_TIME_SECONDS = 1.0;
     final double SORT_TIME_SECONDS = 0.5;
-    final double FEED_TIME_SECONDS = 0.4; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double HOLD_SPEED = 0.6;
     final double STOP_SPEED = 0.0;
     final double CLOSE = 0.0;
     final double OPEN = 1.0;
-    final double LAUNCHER_TARGET_VELOCITY_FAST = 850;
-    final double LAUNCHER_MIN_VELOCITY_FAST = 800;
-    final double LAUNCHER_TARGET_VELOCITY_SLOW = 675;
-    final double LAUNCHER_MIN_VELOCITY_SLOW = 625;
+    final double LAUNCHER_TARGET_VELOCITY_FAST = 1400;
+    final double LAUNCHER_MIN_VELOCITY_FAST = 1500;
+    final double LAUNCHER_TARGET_VELOCITY_SLOW = 1200;
+    final double LAUNCHER_MIN_VELOCITY_SLOW = 1100;
     final double DRIVING_SPEED_MULTIPLIER = 0.8;
     final float GAIN = 12;
     private enum LaunchState {
