@@ -118,10 +118,12 @@ public class Test extends LinearOpMode {
 
 
             if (gamepad1.a){
-                targetVelocity += 1;
+                targetVelocity += 25;
+                sleep(250);
             }
             if (gamepad1.b){
-                targetVelocity -= 1;
+                targetVelocity -= 25;
+                sleep(250);
             }
 
             if (testOn){
