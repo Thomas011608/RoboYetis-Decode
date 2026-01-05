@@ -14,8 +14,9 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="CompetitionTeleOp", group="Linear OpMode")
-public class CompetitionTeleOp extends LinearOpMode {
+
+@TeleOp(name="Competition TeleOp", group="Linear OpMode")
+public class CompetitionTeleOp_old_robot extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor frontLeftDrive = null;
@@ -26,7 +27,8 @@ public class CompetitionTeleOp extends LinearOpMode {
     private CRServo greenFeeder = null;
     private CRServo purpleFeeder = null;
     private DcMotor intake = null;
-    private Servo SortPaddle = null;
+    private Servo purpleGate = null;
+    private Servo greenGate = null;
     NormalizedColorSensor colorSensor;
 
 
@@ -39,9 +41,8 @@ public class CompetitionTeleOp extends LinearOpMode {
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double HOLD_SPEED = 0.6;
     final double STOP_SPEED = 0.0;
-    final double PurpleSort = 0.0;
-    final double IdleSort = 0.5;
-    final double GreenSort = 1.0;
+    final double CLOSE = 0.0;
+    final double OPEN = 1.0;
     final double LAUNCHER_TARGET_VELOCITY_FAST = 1400;
     final double LAUNCHER_MIN_VELOCITY_FAST = 1500;
     final double LAUNCHER_TARGET_VELOCITY_SLOW = 1200;
@@ -62,7 +63,7 @@ public class CompetitionTeleOp extends LinearOpMode {
     }
     private enum SortState {
         IDLE,
-        SORTING,
+        OPEN,
         WAIT,
     }
     private LaunchState launchState;
@@ -110,8 +111,10 @@ public class CompetitionTeleOp extends LinearOpMode {
         purpleFeeder.setDirection(CRServo.Direction.REVERSE);
 
         // HEADER: Gate Servo Definitions
-        SortPaddle = hardwareMap.get(Servo.class,"sorting_gate");
-        SortPaddle.setPosition(IdleSort);
+        greenGate = hardwareMap.get(Servo.class,"green_gate");
+        purpleGate = hardwareMap.get(Servo.class,"purple_gate");
+        greenGate.setPosition(CLOSE);
+        purpleGate.setPosition(CLOSE);
 
         // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class,"intake");
@@ -202,27 +205,28 @@ public class CompetitionTeleOp extends LinearOpMode {
             case IDLE:
                 max = red+green+blue;
                 if (max>0.3 && max<2.25){
-                    sortState = SortState.SORTING;
+                    sortState = SortState.OPEN;
                 }
                 break;
-            case SORTING:
+            case OPEN:
                 max = red+green+blue;
                 if (red > 0.2 && red>green && blue>green && max<2.25) {
                     telemetry.addData("Color","Purple");
-                    SortPaddle.setPosition(PurpleSort);
+                    purpleGate.setPosition(OPEN);
                     sortTimer.reset();
                     sortState = SortState.WAIT;
                 }
                 else if (green>0.2 && green>red && green>blue && max<2.25) {
                     telemetry.addData("Color","Green");
-                    SortPaddle.setPosition(GreenSort);
+                    greenGate.setPosition(OPEN);
                     sortTimer.reset();
                     sortState = SortState.WAIT;
                 }
                 break;
             case WAIT:
                 if (sortTimer.seconds() > SORT_TIME_SECONDS){
-                    SortPaddle.setPosition(IdleSort);
+                    purpleGate.setPosition(CLOSE);
+                    greenGate.setPosition(CLOSE);
                     sortState = SortState.IDLE;
                 }
                 break;
