@@ -69,7 +69,7 @@ public class GoBildaPrismConfigurator extends LinearOpMode {
     PoliceLights.PoliceLightsStyle policeLightsStyle = PoliceLights.PoliceLightsStyle.Style1;
 
     int startPoint = 0; // the start LED for any configured animation
-    int endPoint = 12; // the end LED for a configured animation
+    int endPoint = 35; // the end LED for a configured animation
     int brightness = 50; // the brightness of configured animation
     int period = 1000; // the period of a configured animation
     float speed = 0.5F; // the speed of a configured animation
@@ -421,22 +421,22 @@ public class GoBildaPrismConfigurator extends LinearOpMode {
     public void configureEndPoints(){
         if(gamepad1.dpadLeftWasPressed()){
             startPoint -= 1;
-            startPoint = Math.min(Math.min(255,Math.max(0,startPoint)),endPoint-1);
+            startPoint = Math.min(Math.min(255,Math.max(0,startPoint)),endPoint-0);
             configureEndpointsAnimation(false);
         }
         if(gamepad1.dpadRightWasPressed()){
             startPoint += 1;
-            startPoint = Math.min(Math.min(255,Math.max(0,startPoint)),endPoint-1);
+            startPoint = Math.min(Math.min(255,Math.max(0,startPoint)),endPoint-0);
             configureEndpointsAnimation(false);
         }
         if(gamepad1.leftBumperWasPressed()){
             endPoint -= 1;
-            endPoint = Math.max(Math.min(255,Math.max(0,endPoint)),startPoint+1);
+            endPoint = Math.max(Math.min(255,Math.max(0,endPoint)),startPoint+0);
             configureEndpointsAnimation(false);
         }
         if(gamepad1.rightBumperWasPressed()){
             endPoint += 1;
-            endPoint = Math.max(Math.min(255,Math.max(0,endPoint)),startPoint+1);
+            endPoint = Math.max(Math.min(255,Math.max(0,endPoint)),startPoint+0);
             configureEndpointsAnimation(false);
         }
 
