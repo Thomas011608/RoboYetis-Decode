@@ -154,16 +154,17 @@ public class SensorHusky extends LinearOpMode {
                  *
                  * These values have Java type int (integer).
                  */
+                if (order == 1){
+                    telemetry.addData("Order", "Green Purple Purple");
+                }
+                if (order == 2){
+                    telemetry.addData("Order", "Purple Green Purple");
+                }
+                if (order == 3){
+                    telemetry.addData("Order", "Purple Purple Green");
+                }
             }
-            if (order == 1){
-                telemetry.addData("Order", "Green Purple Purple");
-            }
-            if (order == 2){
-                telemetry.addData("Order", "Purple Green Purple");
-            }
-            if (order == 3){
-                telemetry.addData("Order", "Purple Purple Green");
-            }
+
 
             telemetry.update();
         }

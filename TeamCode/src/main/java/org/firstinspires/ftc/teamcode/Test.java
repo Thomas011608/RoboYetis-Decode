@@ -125,6 +125,14 @@ public class Test extends LinearOpMode {
                 targetVelocity -= 25;
                 sleep(250);
             }
+            if (gamepad1.dpad_up){
+                targetVelocity += 250;
+                sleep(250);
+            }
+            if (gamepad1.dpad_down){
+                targetVelocity -= 250;
+                sleep(250);
+            }
 
             if (testOn){
                 test.setVelocity(targetVelocity);
