@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -116,7 +117,7 @@ public class CompetitionTeleOp extends LinearOpMode {
 
         // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class,"intake");
-        intake.setDirection(DcMotor.Direction.FORWARD);
+        intake.setDirection(DcMotor.Direction.REVERSE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // HEADER: Color Sensor Definitions
@@ -194,7 +195,9 @@ public class CompetitionTeleOp extends LinearOpMode {
             // HEADER: Call various functions used for sorting, intake and launching
             sort(colors.red, colors.green, colors.blue);
 
-            intakeBall(gamepad2.dpadUpWasPressed(), gamepad2.dpadDownWasPressed());
+            intakeBall(gamepad2.dpadUpWasPressed());
+
+            //gamepad2.dpadUpWasPressed
 
             launch(gamepad2.xWasPressed(), gamepad2.aWasPressed(), gamepad2.bWasPressed(), gamepad2.yWasPressed());
 
@@ -256,30 +259,23 @@ public class CompetitionTeleOp extends LinearOpMode {
                 break;
         }
     }
-    void intakeBall(boolean startIntake, boolean stopIntake){
+    void intakeBall(boolean startIntake){
         switch (intakeState) {
             case IDLE:
-                if (startIntake){
+                if (startIntake) {
                     intakeState = IntakeState.INTAKE;
                 }
                 break;
             case INTAKE:
                 intake.setPower(MAX_SPEED);
-                intakeTimer.reset();
-                if (intakeTimer.seconds() > INTAKE_TIME_SECONDS){
-                    intakeState = IntakeState.HOLD;
-                }
-                if (stopIntake){
+                if (startIntake) {
                     intake.setPower(STOP_SPEED);
                     intakeState = IntakeState.IDLE;
                 }
+                intakeState = IntakeState.HOLD;
                 break;
             case HOLD:
-                intake.setPower(HOLD_SPEED);
-                if (startIntake){
-                    intakeState = IntakeState.INTAKE;
-                }
-                if (stopIntake){
+                if (startIntake) {
                     intake.setPower(STOP_SPEED);
                     intakeState = IntakeState.IDLE;
                 }
