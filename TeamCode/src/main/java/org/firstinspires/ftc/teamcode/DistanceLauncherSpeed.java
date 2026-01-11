@@ -23,7 +23,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class DistanceLauncherSpeed extends LinearOpMode {
 
     private final int READ_PERIOD = 1;
-    private HuskyLens huskyLens = null;
+    private static HuskyLens huskyLens = null;
     private DcMotorEx launcher = null;
     private CRServo leftFeeder = null;
     private CRServo rightFeeder = null;
@@ -89,8 +89,6 @@ public class DistanceLauncherSpeed extends LinearOpMode {
                 double distance = Math.pow((area/16139259.8),(1/-1.89076));
                 telemetry.addData("Distance", distance);
                 telemetry.addData("Area", area);
-
-                Distance[Distance.length] = distance;
             }
 
             if (gamepad1.aWasPressed()) {
@@ -105,28 +103,53 @@ public class DistanceLauncherSpeed extends LinearOpMode {
 
             if (gamepad1.xWasPressed()) {
                 launcher.setVelocity(LAUNCH_MOTOR_SET_SPEED);
+                launchTimer.reset();
             }
 
             if (gamepad1.yWasPressed()) {
                 launchTimer.reset();
                 leftFeeder.setPower(MAX_SPEED);
                 rightFeeder.setPower(MAX_SPEED);
-
-                // Set variables
-                MotorSpeed[MotorSpeed.length] = launcher.getVelocity();
             }
 
-            if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
+            if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS + 9) {
                 launcher.setVelocity(STOP_SPEED);
                 launcher.setPower(STOP_SPEED);
                 leftFeeder.setPower(STOP_SPEED);
                 rightFeeder.setPower(STOP_SPEED);
             }
 
+            double distance = GetDistance();
+            telemetry.addData("GetDistance", distance);
+            //double power = 0.117582*(Math.pow(distance,2)) - 37.19797*distance + 4136.25617;
+            //double power = 0.0610355*(Math.pow(distance,2)) - 19.20547*distance + 2718.58097;
+            double power;
+            if (distance<130){
+                power = 1300;
+            } else if (distance>240){
+                power = 1475;
+            } else {
+                power = 0.0360562*(Math.pow(distance,2)) - 11.25698*distance + 2092.27902;
+            }
+            telemetry.addData("Power",power);
+
+            if (gamepad1.dpadUpWasPressed()){
+                LAUNCH_MOTOR_SET_SPEED = power;
+                LAUNCH_MOTOR_MIN_SPEED = LAUNCH_MOTOR_SET_SPEED - 100;
+            }
+
+            telemetry.addData("Target Speed", LAUNCH_MOTOR_SET_SPEED);
+            telemetry.addData("Current Velocity", launcher.getVelocity());
             telemetry.update();
         }
-        telemetry.addData("Avg Launch Speed:", Arrays.stream(MotorSpeed).average().toString());
-        telemetry.addData("Avg Distance", Arrays.stream(Distance).average().toString());
-        telemetry.update();
+    }
+    public static double GetDistance(){
+        double distance = 0;
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        for (int i = 0; i < blocks.length; i++) {
+            double area = blocks[i].width*blocks[i].height;
+            distance = Math.pow((area/16139259.8),(1/-1.89076));
+        }
+        return distance;
     }
 }
