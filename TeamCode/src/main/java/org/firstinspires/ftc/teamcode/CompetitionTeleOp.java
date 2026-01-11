@@ -40,6 +40,8 @@ public class CompetitionTeleOp extends LinearOpMode {
     final double SORT_TIME_SECONDS = 0.5;
     final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
+    final double MAX_SPEED_REVERSE = -1.0;
+
     final double HOLD_SPEED = 0.6;
     final double STOP_SPEED = 0.0;
     final double PurpleSort = 0.0;
@@ -61,7 +63,9 @@ public class CompetitionTeleOp extends LinearOpMode {
     private enum IntakeState {
         IDLE,
         INTAKE,
+        OUTTAKE,
         HOLD,
+        HOLDTWO,
     }
     private enum SortState {
         IDLE,
@@ -195,7 +199,7 @@ public class CompetitionTeleOp extends LinearOpMode {
             // HEADER: Call various functions used for sorting, intake and launching
             sort(colors.red, colors.green, colors.blue);
 
-            intakeBall(gamepad2.dpadUpWasPressed());
+            intakeBall(gamepad2.dpadDownWasPressed(), gamepad2.dpadUpWasPressed());
 
             //gamepad2.dpadUpWasPressed
 
@@ -259,27 +263,51 @@ public class CompetitionTeleOp extends LinearOpMode {
                 break;
         }
     }
-    void intakeBall(boolean startIntake){
+    void intakeBall(boolean Intake, boolean Outtake){
         switch (intakeState) {
             case IDLE:
-                if (startIntake) {
+                if (Intake) {
                     intakeState = IntakeState.INTAKE;
+                }
+                if (Outtake) {
+                    intakeState = IntakeState.OUTTAKE;
                 }
                 break;
             case INTAKE:
                 intake.setPower(MAX_SPEED);
-                if (startIntake) {
+                if (Intake) {
                     intake.setPower(STOP_SPEED);
                     intakeState = IntakeState.IDLE;
                 }
                 intakeState = IntakeState.HOLD;
                 break;
-            case HOLD:
-                if (startIntake) {
+            case OUTTAKE:
+                intake.setPower(MAX_SPEED_REVERSE);
+                if (Outtake) {
                     intake.setPower(STOP_SPEED);
                     intakeState = IntakeState.IDLE;
                 }
+                intakeState = IntakeState.HOLDTWO;
                 break;
+            case HOLD:
+                if (Intake) {
+                    intake.setPower(STOP_SPEED);
+                    intakeState = IntakeState.IDLE;
+                }
+                if (Outtake) {
+                    intakeState = IntakeState.OUTTAKE;
+                }
+                break;
+            case HOLDTWO:
+                if (Intake) {
+                    intake.setPower(STOP_SPEED);
+                    intakeState = IntakeState.INTAKE;
+                }
+                if (Outtake) {
+                    intakeState = IntakeState.IDLE;
+                }
+                break;
+
         }
     }
     void launch(boolean slowShotRequested, boolean fastShotRequested, boolean greenShotRequested, boolean purpleShotRequested){
