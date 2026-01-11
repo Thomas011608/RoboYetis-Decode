@@ -300,10 +300,10 @@ public class CompetitionTeleOp extends LinearOpMode {
                 break;
             case HOLDTWO:
                 if (Intake) {
-                    intake.setPower(STOP_SPEED);
                     intakeState = IntakeState.INTAKE;
                 }
                 if (Outtake) {
+                    intake.setPower(STOP_SPEED);
                     intakeState = IntakeState.IDLE;
                 }
                 break;
