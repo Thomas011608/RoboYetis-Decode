@@ -35,9 +35,11 @@ public class IndividualTeleOp extends LinearOpMode {
     ElapsedTime feederTimer = new ElapsedTime();
     ElapsedTime intakeTimer = new ElapsedTime();
     ElapsedTime sortTimer = new ElapsedTime();
+    ElapsedTime launchTimer = new ElapsedTime();
     final double INTAKE_TIME_SECONDS = 1.0;
     final double SORT_TIME_SECONDS = 0.5;
     final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
+    final double LAUNCH_TIME_SECONDS = 1.0; // How long after speed up the launcher stays on.
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double HOLD_SPEED = 0.6;
     final double STOP_SPEED = 0.0;
@@ -165,13 +167,11 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 intake.setPower(MAX_SPEED);
                 intakeTimer.reset();
-                while (intakeTimer.seconds() < INTAKE_TIME_SECONDS) {
-                    if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
-                        break;
-                    }
+
+                if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
+                    intake.setPower(STOP_SPEED);
                 }
 
-                intake.setPower(STOP_SPEED);
             }
 
             //Intake Wheel Backward (D-Pad Down)
@@ -180,13 +180,10 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 intake.setPower(-MAX_SPEED);
                 intakeTimer.reset();
-                while (intakeTimer.seconds() < INTAKE_TIME_SECONDS) {
-                    if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
-                        break;
-                    }
-                }
 
-                intake.setPower(STOP_SPEED);
+                if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
+                    intake.setPower(STOP_SPEED);
+                }
             }
 
             //Feeder Wheel Left Launch (D-Pad Left)
@@ -195,13 +192,10 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 leftFeeder.setPower(MAX_SPEED);
                 feederTimer.reset();
-                while (feederTimer.seconds() < FEED_TIME_SECONDS) {
-                    if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
-                        break;
-                    }
-                }
 
-                leftFeeder.setPower(STOP_SPEED);
+                if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
+                    leftFeeder.setPower(STOP_SPEED);
+                }
             }
 
             //Feeder Wheel Right Launch (D-Pad Right)
@@ -210,13 +204,10 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 rightFeeder.setPower(MAX_SPEED);
                 feederTimer.reset();
-                while (feederTimer.seconds() < FEED_TIME_SECONDS) {
-                    if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
-                        break;
-                    }
-                }
 
-                rightFeeder.setPower(STOP_SPEED);
+                if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
+                    rightFeeder.setPower(STOP_SPEED);
+                }
             }
 
             //Launcher Slow
@@ -224,42 +215,46 @@ public class IndividualTeleOp extends LinearOpMode {
                 telemetry.addData("Part:","Slow Launch");
 
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_SLOW);
-                while (launcher.getVelocity() < LAUNCHER_MIN_VELOCITY_SLOW) {
-                    if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY_SLOW) {
-                        break;
-                    }
-                }
-                sleep(1000);
 
-                launcher.setVelocity(STOP_SPEED);
-                launcher.setPower(STOP_SPEED);
+                if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY_SLOW) {
+                    launchTimer.reset();
+                }
+
+                if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
+                    launcher.setVelocity(STOP_SPEED);
+                    launcher.setPower(STOP_SPEED);
+                }
             }
 
             //Launcher Fast
             if (gamepad1.aWasPressed()) {
-                telemetry.addData("Part:","Fast Launch");
+                telemetry.addData("Part:","Slow Launch");
 
-                launcher.setVelocity(LAUNCHER_MIN_VELOCITY_FAST);
-                while (launcher.getVelocity() < LAUNCHER_TARGET_VELOCITY_FAST) {
-                    if (launcher.getVelocity() >= LAUNCHER_TARGET_VELOCITY_FAST) {
-                        break;
-                    }
+                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_FAST);
+
+                if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY_FAST) {
+                    launchTimer.reset();
                 }
-                sleep(1000);
 
-                launcher.setVelocity(STOP_SPEED);
-                launcher.setPower(STOP_SPEED);
+                if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
+                    launcher.setVelocity(STOP_SPEED);
+                    launcher.setPower(STOP_SPEED);
+                }
             }
 
             // HEADER: Use telemetry to print any desired information to the driver hub
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
 
+            // Display data about tags in view of the camera
             for (int i = 0; i <= tags.length; i++) {
                 telemetry.addData("Tags In View:", tags[i].toString());
             }
 
+            // Show color values found by the color sensor
             telemetry.addData("Color RGB", colors);
+
+            //Display the motor speed
             telemetry.addData("motorSpeed", launcher.getVelocity());
             telemetry.update();
         }
