@@ -76,7 +76,6 @@ public class CompetitionTeleOp extends LinearOpMode {
         launchState = LaunchState.IDLE;
         intakeState = IntakeState.IDLE;
         sortState = SortState.IDLE;
-
         // HEADER: Driving Motor Definitions
         frontLeftDrive = hardwareMap.get(DcMotor.class, "front_left_drive");
         backLeftDrive = hardwareMap.get(DcMotor.class, "back_left_drive");
@@ -173,7 +172,7 @@ public class CompetitionTeleOp extends LinearOpMode {
             backLeftDrive.setPower(backLeftPower*DRIVING_SPEED_MULTIPLIER);
             backRightDrive.setPower(backRightPower*DRIVING_SPEED_MULTIPLIER);
 
-           /*
+            /*
             // HEADER: Find AprilTags in the Camera's view
             huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
             HuskyLens.Block[] tags = huskyLens.blocks(); // tags is the value of AprilTags in view
@@ -209,7 +208,9 @@ public class CompetitionTeleOp extends LinearOpMode {
             telemetry.update();
         }
     }
-    /*void sort(double red, double green, double blue){
+
+    /*
+    void sort(double red, double green, double blue){
         double max;
         max = red+green+blue;
         if (red > 0.2 && red>green && blue>green && max<2.25) {
@@ -220,8 +221,10 @@ public class CompetitionTeleOp extends LinearOpMode {
             telemetry.addData("Color","Green");
             greenGate.setPosition(OPEN);
         }
-    }*/
-    void sort(double red, double green, double blue){
+    }
+    */
+
+    void sort(double red, double green, double blue) {
         double max;
         switch (sortState) {
             case IDLE:
