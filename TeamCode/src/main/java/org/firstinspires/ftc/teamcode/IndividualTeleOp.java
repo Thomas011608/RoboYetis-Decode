@@ -74,11 +74,11 @@ public class IndividualTeleOp extends LinearOpMode {
         // HEADER: Launcher Motor Definitions
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         //Set Launcher Direction
-        launcher.setDirection(DcMotor.Direction.FORWARD);
-        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 5, 10, 25));
+        launcher.setDirection(DcMotorEx.Direction.FORWARD);
+        launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        launcher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 5, 10, 25));
         //Set Launcher Zero Power Behavior
-        launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         // HEADER: Feeder Servo Definitions
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
