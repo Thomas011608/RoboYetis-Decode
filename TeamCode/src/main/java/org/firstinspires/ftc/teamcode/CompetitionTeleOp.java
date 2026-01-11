@@ -82,10 +82,10 @@ public class CompetitionTeleOp extends LinearOpMode {
         frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
         backRightDrive = hardwareMap.get(DcMotor.class, "back_right_drive");
         //Set Driving Direction
-        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
         //Set Driving Zero Power Behavior
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -95,7 +95,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         // HEADER: Launcher Motor Definitions
         launcher = hardwareMap.get(DcMotorEx.class,"launcher");
         //Set Launcher Direction
-        launcher.setDirection(DcMotor.Direction.FORWARD);
+        launcher.setDirection(DcMotor.Direction.REVERSE);
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 5, 10, 25));
         //Set Launcher Zero Power Behavior

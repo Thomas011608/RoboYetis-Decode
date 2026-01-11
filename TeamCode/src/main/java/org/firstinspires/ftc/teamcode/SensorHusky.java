@@ -149,7 +149,7 @@ public class SensorHusky extends LinearOpMode {
                 double distance = Math.pow((area/16139259.8),(1/-1.89076));
                 telemetry.addData("Distance", distance);
 
-                telemetry.addData("Area", blocks[i].width*blocks[i].height);
+                telemetry.addData("Area", area);
                 /*
                  * Here inside the FOR loop, you could save or evaluate specific info for the currently recognized Bounding Box:
                  * - blocks[i].width and blocks[i].height   (size of box, in pixels)
