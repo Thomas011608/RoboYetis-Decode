@@ -112,7 +112,7 @@ public class CompetitionTeleOp extends LinearOpMode {
 
         // HEADER: Gate Servo Definitions
         SortPaddle = hardwareMap.get(Servo.class,"sorting_gate");
-        SortPaddle.setPosition(IdleSort);
+        //SortPaddle.setPosition(IdleSort);
 
         // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class,"intake");

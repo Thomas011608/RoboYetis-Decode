@@ -93,7 +93,7 @@ public class IndividualTeleOp extends LinearOpMode {
 
         // HEADER: Gate Servo Definitions
         SortPaddle = hardwareMap.get(Servo.class, "sorting_gate");
-        SortPaddle.setPosition(IdleSort);
+        //SortPaddle.setPosition(IdleSort);
 
         // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class, "intake");
@@ -167,11 +167,9 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 intake.setPower(MAX_SPEED);
                 intakeTimer.reset();
-
-                if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
-                    intake.setPower(STOP_SPEED);
-                }
-
+            }
+            if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
+                intake.setPower(STOP_SPEED);
             }
 
             //Intake Wheel Backward (D-Pad Down)
@@ -180,10 +178,9 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 intake.setPower(-MAX_SPEED);
                 intakeTimer.reset();
-
-                if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
-                    intake.setPower(STOP_SPEED);
-                }
+            }
+            if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
+                intake.setPower(STOP_SPEED);
             }
 
             //Feeder Wheel Left Launch (D-Pad Left)
@@ -192,10 +189,9 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 leftFeeder.setPower(MAX_SPEED);
                 feederTimer.reset();
-
-                if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
-                    leftFeeder.setPower(STOP_SPEED);
-                }
+            }
+            if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
+                leftFeeder.setPower(STOP_SPEED);
             }
 
             //Feeder Wheel Right Launch (D-Pad Right)
@@ -204,10 +200,9 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 rightFeeder.setPower(MAX_SPEED);
                 feederTimer.reset();
-
-                if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
-                    rightFeeder.setPower(STOP_SPEED);
-                }
+            }
+            if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
+                rightFeeder.setPower(STOP_SPEED);
             }
 
             //Launcher Slow
@@ -215,15 +210,11 @@ public class IndividualTeleOp extends LinearOpMode {
                 telemetry.addData("Part:","Slow Launch");
 
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_SLOW);
-
-                if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY_SLOW) {
-                    launchTimer.reset();
-                }
-
-                if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
-                    launcher.setVelocity(STOP_SPEED);
-                    launcher.setPower(STOP_SPEED);
-                }
+                launchTimer.reset();
+            }
+            if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
+                launcher.setVelocity(STOP_SPEED);
+                launcher.setPower(STOP_SPEED);
             }
 
             //Launcher Fast
@@ -231,15 +222,11 @@ public class IndividualTeleOp extends LinearOpMode {
                 telemetry.addData("Part:","Slow Launch");
 
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_FAST);
-
-                if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY_FAST) {
-                    launchTimer.reset();
-                }
-
-                if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
-                    launcher.setVelocity(STOP_SPEED);
-                    launcher.setPower(STOP_SPEED);
-                }
+                launchTimer.reset();
+            }
+            if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
+                launcher.setVelocity(STOP_SPEED);
+                launcher.setPower(STOP_SPEED);
             }
 
             // HEADER: Use telemetry to print any desired information to the driver hub
@@ -247,9 +234,9 @@ public class IndividualTeleOp extends LinearOpMode {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
 
             // Display data about tags in view of the camera
-            for (int i = 0; i <= tags.length; i++) {
+            /*for (int i = 0; i <= tags.length; i++) {
                 telemetry.addData("Tags In View:", tags[i].toString());
-            }
+            }*/
 
             // Show color values found by the color sensor
             telemetry.addData("Color RGB", colors);
