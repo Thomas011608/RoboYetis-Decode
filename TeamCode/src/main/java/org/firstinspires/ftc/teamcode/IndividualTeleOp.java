@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -23,12 +24,14 @@ public class IndividualTeleOp extends LinearOpMode {
     private DcMotor frontRightDrive = null;
     private DcMotor backRightDrive = null;
     private DcMotorEx launcher = null;
-    private CRServo leftFeeder = null;
-    private CRServo rightFeeder = null;
+    //private CRServo leftFeeder = null;
+    //private CRServo rightFeeder = null;
+    private DcMotor leftFeeder = null;
+    private DcMotor rightFeeder = null;
     private DcMotor intake = null;
     private Servo SortPaddle = null;
     NormalizedColorSensor colorSensor;
-    private HuskyLens huskyLens; //huskyLens is the variable of our camera
+    private static HuskyLens huskyLens; //huskyLens is the variable of our camera
 
     // Create new variables for each action
     ElapsedTime feederTimer = new ElapsedTime();
@@ -38,7 +41,7 @@ public class IndividualTeleOp extends LinearOpMode {
     ElapsedTime runtime = new ElapsedTime();
     final double INTAKE_TIME_SECONDS = 1.0; //The intake runs for this long before stopping
     final double FEED_TIME_SECONDS = 1.0; //The feeder servos run for this time when a shot is requested.
-    final double FEED_IN_TIME_SECONDS = 0.5; // The feeder servos run backwards for this time
+    final double FEED_IN_TIME_SECONDS = 1.0; // The feeder servos run backwards for this time
     final double LAUNCH_TIME_SECONDS = 1.0; // How long after speed up the launcher stays on.
     final double MAX_SPEED = 1.0;
     final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
@@ -51,6 +54,7 @@ public class IndividualTeleOp extends LinearOpMode {
     final double LAUNCHER_MIN_VELOCITY_SLOW = 1100;
     final double DRIVING_SPEED_MULTIPLIER = 0.8;
     final float GAIN = 12;
+    boolean USE_POWER_FUNCTION = false;
 
     @Override
     public void runOpMode() {
@@ -66,10 +70,10 @@ public class IndividualTeleOp extends LinearOpMode {
         frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
         backRightDrive = hardwareMap.get(DcMotor.class, "back_right_drive");
         //Set Driving Direction
-        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
         //Set Driving Zero Power Behavior
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -79,20 +83,22 @@ public class IndividualTeleOp extends LinearOpMode {
         // HEADER: Launcher Motor Definitions
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         //Set Launcher Direction
-        launcher.setDirection(DcMotorEx.Direction.FORWARD);
+        launcher.setDirection(DcMotorEx.Direction.REVERSE);
         launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 5, 10, 25));
         //Set Launcher Zero Power Behavior
         launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         // HEADER: Feeder Servo Definitions
-        leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
-        rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
+        //leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
+        //rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
+        leftFeeder = hardwareMap.get(DcMotor.class, "left_feeder");
+        rightFeeder = hardwareMap.get(DcMotor.class, "right_feeder");
         leftFeeder.setPower(STOP_SPEED);
         rightFeeder.setPower(STOP_SPEED);
         //Set Servo Direction
-        leftFeeder.setDirection(CRServo.Direction.FORWARD);
-        rightFeeder.setDirection(CRServo.Direction.REVERSE);
+        leftFeeder.setDirection(DcMotor.Direction.FORWARD);
+        rightFeeder.setDirection(DcMotor.Direction.REVERSE);
 
         // HEADER: Gate Servo Definitions
         SortPaddle = hardwareMap.get(Servo.class, "sorting_gate");
@@ -100,7 +106,7 @@ public class IndividualTeleOp extends LinearOpMode {
 
         // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class, "intake");
-        intake.setDirection(DcMotor.Direction.FORWARD);
+        intake.setDirection(DcMotor.Direction.REVERSE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // HEADER: Color Sensor Definitions
@@ -113,6 +119,9 @@ public class IndividualTeleOp extends LinearOpMode {
             telemetry.addData("HuskyLens","Not Initialized");
             telemetry.update();
         }
+        double distance = 0;
+
+
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -170,11 +179,9 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 intake.setPower(MAX_SPEED);
                 intakeTimer.reset();
-
-                if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
-                    intake.setPower(STOP_SPEED);
-                }
-
+            }
+            if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
+                intake.setPower(STOP_SPEED);
             }
 
             //Feeder Wheels Backward (D-Pad Down)
@@ -184,11 +191,6 @@ public class IndividualTeleOp extends LinearOpMode {
                 leftFeeder.setPower(-MAX_SPEED);
                 rightFeeder.setPower(-MAX_SPEED);
                 feederTimer.reset();
-
-                if (feederTimer.seconds() >= FEED_IN_TIME_SECONDS) {
-                    leftFeeder.setPower(STOP_SPEED);
-                    rightFeeder.setPower(STOP_SPEED);
-                }
             }
 
             //Feeder Wheel Left Launch (D-Pad Left)
@@ -197,10 +199,6 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 leftFeeder.setPower(MAX_SPEED);
                 feederTimer.reset();
-
-                if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
-                    leftFeeder.setPower(STOP_SPEED);
-                }
             }
 
             //Feeder Wheel Right Launch (D-Pad Right)
@@ -209,44 +207,62 @@ public class IndividualTeleOp extends LinearOpMode {
 
                 rightFeeder.setPower(MAX_SPEED);
                 feederTimer.reset();
-
-                if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
-                    rightFeeder.setPower(STOP_SPEED);
-                }
             }
 
-            //Launcher Slow
-            if (gamepad2.xWasPressed()) {
-                telemetry.addData("Part:","Slow Launch");
+            if (feederTimer.seconds() >= FEED_IN_TIME_SECONDS) {
+                leftFeeder.setPower(STOP_SPEED);
+                rightFeeder.setPower(STOP_SPEED);
+            }
 
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_SLOW);
 
-                if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY_SLOW) {
+
+            if (gamepad1.dpadUpWasPressed()){
+                USE_POWER_FUNCTION = !USE_POWER_FUNCTION;
+            }
+
+            if (USE_POWER_FUNCTION) {
+                if (GetDistance() != 0){
+                    distance = GetDistance();
+                }
+                telemetry.addData("GetDistance", distance);
+                //double power = 0.117582*(Math.pow(distance,2)) - 37.19797*distance + 4136.25617;
+                //double power = 0.0610355*(Math.pow(distance,2)) - 19.20547*distance + 2718.58097;
+                double power;
+                if (distance < 130) {
+                    power = 1300;
+                } else if (distance > 240) {
+                    power = 1475;
+                } else {
+                    power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+                }
+                if (gamepad2.xWasPressed()) {
+                    launcher.setVelocity(power);
+                    launchTimer.reset();
+                }
+                telemetry.addData("Power", power);
+            } else {
+                //Launcher Slow
+                if (gamepad2.xWasPressed()) {
+                    telemetry.addData("Part:", "Slow Launch");
+
+                    launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_SLOW);
                     launchTimer.reset();
                 }
 
-                if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
-                    launcher.setVelocity(STOP_SPEED);
-                    launcher.setPower(STOP_SPEED);
-                }
-            }
+                //Launcher Fast
+                if (gamepad2.aWasPressed()) {
+                    telemetry.addData("Part:", "Slow Launch");
 
-            //Launcher Fast
-            if (gamepad2.aWasPressed()) {
-                telemetry.addData("Part:","Slow Launch");
-
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_FAST);
-
-                if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY_FAST) {
+                    launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_FAST);
                     launchTimer.reset();
                 }
-
-                if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS) {
-                    launcher.setVelocity(STOP_SPEED);
-                    launcher.setPower(STOP_SPEED);
-                }
+                telemetry.addData("Slow Target", LAUNCHER_TARGET_VELOCITY_SLOW);
+                telemetry.addData("Fast Target", LAUNCHER_TARGET_VELOCITY_FAST);
             }
-
+            if (launchTimer.seconds() >= LAUNCH_TIME_SECONDS + 4) {
+                launcher.setVelocity(STOP_SPEED);
+                launcher.setPower(STOP_SPEED);
+            }
             // Purple Sort Position (y)
             if (gamepad2.yWasPressed()) {
                 telemetry.addData("Part:","Purple Sort");
@@ -260,14 +276,24 @@ public class IndividualTeleOp extends LinearOpMode {
                 SortPaddle.setPosition(GreenSort);
             }
 
+
+            HuskyLens.Block[] blocks = huskyLens.blocks();
+            telemetry.addData("Block count", blocks.length);
+            for (int i = 0; i < blocks.length; i++) {
+                telemetry.addData("Block", blocks[i].toString());
+
+                if (blocks[i].x > 140 && blocks[i].x < 180){
+                    gamepad1.rumble(100);
+                    gamepad2.rumble(100);
+                }
+
+            }
+
+
             // HEADER: Use telemetry to print any desired information to the driver hub
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
 
-            // Display data about tags in view of the camera
-            for (int i = 0; i <= tags.length; i++) {
-                telemetry.addData("Tags In View:", tags[i].toString());
-            }
 
             // Show color values found by the color sensor
             telemetry.addData("Color RGB", colors);
@@ -280,7 +306,17 @@ public class IndividualTeleOp extends LinearOpMode {
         telemetry.addData("Status:", "Stopped");
         telemetry.update();
     }
+    public static double GetDistance(){
+        double distance = 0;
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        for (int i = 0; i < blocks.length; i++) {
+            double area = blocks[i].width*blocks[i].height;
+            distance = Math.pow((area/16139259.8),(1/-1.89076));
+        }
+        return distance;
+    }
 }
+
 
     /*
     void sort(double red, double green, double blue){
