@@ -45,27 +45,19 @@ public class CompetitionTeleOp extends LinearOpMode {
     final double IdleSort = 0.5;
     final double GreenSort = 1.0;
     final double LAUNCHER_TARGET_VELOCITY_FAST = 1400;
-    final double LAUNCHER_MIN_VELOCITY_FAST = 1500;
     final double LAUNCHER_TARGET_VELOCITY_SLOW = 1200;
-    final double LAUNCHER_MIN_VELOCITY_SLOW = 1100;
     final double DRIVING_SPEED_MULTIPLIER = 0.8;
     final float GAIN = 12;
-    private enum LaunchState {
-        IDLE,
-        SPIN_UP_FAST,
-        SPIN_UP_SLOW,
-        LAUNCH,
-        SPIN_DOWN,
-    }
     private enum SortState {
         IDLE,
         SORTING,
         WAIT,
     }
-    private LaunchState launchState;
     private SortState sortState;
     private double sortPos = 0.5;
     private int GoalID = 0;
+    private String launchState;
+    private boolean AdaptiveLaunchSpeed = false;
 
     @Override
     public void runOpMode() {
@@ -84,7 +76,6 @@ public class CompetitionTeleOp extends LinearOpMode {
             }
         }
 
-        launchState = LaunchState.IDLE;
         sortState = SortState.IDLE;
 
         // HEADER: Driving Motor Definitions
@@ -180,6 +171,19 @@ public class CompetitionTeleOp extends LinearOpMode {
             backLeftDrive.setPower(backLeftPower * DRIVING_SPEED_MULTIPLIER);
             backRightDrive.setPower(backRightPower * DRIVING_SPEED_MULTIPLIER);
 
+            // HEADER: Set Adaptive Launcher Speed and Servo Position
+            // Set sorting servo to neutral (Left Bumper).
+            if (gamepad2.leftBumperWasPressed()) {
+                sortPos = 0.5;
+                SortPaddle.setPosition(sortPos);
+            }
+
+            //Set Adaptive Launcher Speed (Right Bumper)
+            if (gamepad2.rightBumperWasPressed()) {
+                AdaptiveLaunchSpeed = !AdaptiveLaunchSpeed;
+                telemetry.addData("Adaptive Launch Speed", AdaptiveLaunchSpeed);
+            }
+
             /*
             // HEADER: Set values fo the color sensor and set it up to get data
             colorSensor.setGain(GAIN);
@@ -189,37 +193,15 @@ public class CompetitionTeleOp extends LinearOpMode {
 
             // HEADER: Call various functions used for sorting, intake and launching
             intakeBall(gamepad2.dpadUpWasPressed());
-            launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed());
 
-            // Set sorting servo to neutral (Left Bumper).
-            if (gamepad2.leftBumperWasPressed()) {
-                sortPos = 0.5;
-                SortPaddle.setPosition(sortPos);
-            }
+            launchState = launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed(), AdaptiveLaunchSpeed);
 
             // HEADER: Use telemetry to print any desired information to the driver hub
             // Show the elapsed game time and wheel power.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-
             telemetry.addData("State", launchState);
-            telemetry.addData("motorSpeed", launcher.getVelocity());
+            telemetry.addData("Motor Speed", launcher.getVelocity());
 
             telemetry.update();
-        }
-    }
-
-    void sort() {
-        double max;
-        switch (sortState) {
-            case IDLE:
-
-                break;
-            case SORTING:
-
-                break;
-            case WAIT:
-
-                break;
         }
     }
 
@@ -238,36 +220,50 @@ public class CompetitionTeleOp extends LinearOpMode {
             intake.setPower(STOP_SPEED);
         }
     }
-    void launch(boolean shotRequested, boolean leftShotRequested,boolean rightShotRequested) {
+    String launch(boolean shotRequested, boolean leftShotRequested,boolean rightShotRequested, boolean adaptive) {
         double distance = GetDistance();
         double power;
-        if (distance < 130) {
-            power = 1300;
-        } else if (distance > 240) {
-            power = 1475;
+
+        if (adaptive) {
+            if (distance < 130) {
+                power = 1300;
+            } else if (distance > 240) {
+                power = 1475;
+            } else {
+                power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+            }
         } else {
-            power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+            if (distance < 240) {
+                power = LAUNCHER_TARGET_VELOCITY_SLOW;
+            } else {
+                power = LAUNCHER_TARGET_VELOCITY_FAST;
+            }
         }
         double minPower = power - 100;
 
         if (shotRequested) {
             launcher.setVelocity(power);
+            return "Spin Up";
         }
 
         if (rightShotRequested && launcher.getVelocity() > minPower) {
             rightFeeder.setPower(MAX_SPEED);
             feederTimer.reset();
+            return "Right Shot";
         }
 
         if (leftShotRequested && launcher.getVelocity() > minPower) {
             leftFeeder.setPower(MAX_SPEED);
             feederTimer.reset();
+            return "Left Shot";
         }
 
         if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
             leftFeeder.setPower(STOP_SPEED);
             rightFeeder.setPower(STOP_SPEED);
+            return "Idle";
         }
+        return "Idle";
         /*
         switch (launchState) {
             case IDLE:
@@ -326,6 +322,7 @@ public class CompetitionTeleOp extends LinearOpMode {
                 }
             }
         }
+        telemetry.addData("Distance", distance);
         return distance;
     }
 }
