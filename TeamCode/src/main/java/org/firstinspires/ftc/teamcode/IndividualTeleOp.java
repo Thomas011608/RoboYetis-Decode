@@ -56,6 +56,7 @@ public class IndividualTeleOp extends LinearOpMode {
     final float GAIN = 12;
     boolean USE_POWER_FUNCTION = false;
 
+
     @Override
     public void runOpMode() {
         // HEADER: Reset Timers
@@ -215,7 +216,7 @@ public class IndividualTeleOp extends LinearOpMode {
             }
 
 
-
+            // Switch Power function (D-Pad Up)
             if (gamepad1.dpadUpWasPressed()){
                 USE_POWER_FUNCTION = !USE_POWER_FUNCTION;
             }

@@ -35,13 +35,10 @@ public class CompetitionTeleOp extends LinearOpMode {
 
     ElapsedTime feederTimer = new ElapsedTime();
     ElapsedTime intakeTimer = new ElapsedTime();
-    ElapsedTime sortTimer = new ElapsedTime();
     final double INTAKE_TIME_SECONDS = 1.0;
-    final double SORT_TIME_SECONDS = 0.5;
     final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double MAX_SPEED_REVERSE = -1.0;
-
     final double HOLD_SPEED = 0.6;
     final double STOP_SPEED = 0.0;
     final double PurpleSort = 0.0;
@@ -60,27 +57,36 @@ public class CompetitionTeleOp extends LinearOpMode {
         LAUNCH,
         SPIN_DOWN,
     }
-    private enum IntakeState {
-        IDLE,
-        INTAKE,
-        OUTTAKE,
-        HOLD,
-        HOLDTWO,
-    }
     private enum SortState {
         IDLE,
         SORTING,
         WAIT,
     }
     private LaunchState launchState;
-    private IntakeState intakeState;
     private SortState sortState;
+    private double sortPos = 0.5;
+    private int GoalID = 0;
 
     @Override
     public void runOpMode() {
+        telemetry.addData("Alliance:", "Gamepad 1 press D-Pad Up for Red, D-Pad Down for Blue");
+        telemetry.update();
+        while (true) {
+            if (gamepad1.dpadUpWasPressed()){
+                GoalID = 4;
+                telemetry.addData("Alliance:","Red");
+                break;
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                GoalID = 5;
+                telemetry.addData("Alliance:","Blue");
+                break;
+            }
+        }
+
         launchState = LaunchState.IDLE;
-        intakeState = IntakeState.IDLE;
         sortState = SortState.IDLE;
+
         // HEADER: Driving Motor Definitions
         frontLeftDrive = hardwareMap.get(DcMotor.class, "front_left_drive");
         backLeftDrive = hardwareMap.get(DcMotor.class, "back_left_drive");
@@ -98,7 +104,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // HEADER: Launcher Motor Definitions
-        launcher = hardwareMap.get(DcMotorEx.class,"launcher");
+        launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         //Set Launcher Direction
         launcher.setDirection(DcMotor.Direction.REVERSE);
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -107,8 +113,8 @@ public class CompetitionTeleOp extends LinearOpMode {
         launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // HEADER: Feeder Servo Definitions
-        leftFeeder = hardwareMap.get(CRServo.class,"left_feeder");
-        rightFeeder = hardwareMap.get(CRServo.class,"right_feeder");
+        leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
+        rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
         leftFeeder.setPower(STOP_SPEED);
         rightFeeder.setPower(STOP_SPEED);
         //Set Servo Direction
@@ -116,11 +122,11 @@ public class CompetitionTeleOp extends LinearOpMode {
         rightFeeder.setDirection(CRServo.Direction.REVERSE);
 
         // HEADER: Gate Servo Definitions
-        SortPaddle = hardwareMap.get(Servo.class,"sorting_gate");
-        SortPaddle.setPosition(IdleSort);
+        SortPaddle = hardwareMap.get(Servo.class, "sorting_gate");
+        SortPaddle.setPosition(sortPos);
 
         // HEADER: Intake Motor Definitions
-        intake = hardwareMap.get(DcMotor.class,"intake");
+        intake = hardwareMap.get(DcMotor.class, "intake");
         intake.setDirection(DcMotor.Direction.REVERSE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -128,14 +134,11 @@ public class CompetitionTeleOp extends LinearOpMode {
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
         final float[] hsvValues = new float[3];
 
-        /*
         //HEADER: Camera Definitions and Initialization
         huskyLens = hardwareMap.get(HuskyLens.class, "camera");
         if (!huskyLens.knock()) {
-            telemetry.addData("HuskyLens","Not Initalized");
-            telemetry.update();
+            telemetry.addData("HuskyLens", "Not Initialized");
         }
-        */
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -172,38 +175,27 @@ public class CompetitionTeleOp extends LinearOpMode {
             }
 
             // Send calculated power to wheels
-            frontLeftDrive.setPower(frontLeftPower*DRIVING_SPEED_MULTIPLIER);
-            frontRightDrive.setPower(frontRightPower*DRIVING_SPEED_MULTIPLIER);
-            backLeftDrive.setPower(backLeftPower*DRIVING_SPEED_MULTIPLIER);
-            backRightDrive.setPower(backRightPower*DRIVING_SPEED_MULTIPLIER);
+            frontLeftDrive.setPower(frontLeftPower * DRIVING_SPEED_MULTIPLIER);
+            frontRightDrive.setPower(frontRightPower * DRIVING_SPEED_MULTIPLIER);
+            backLeftDrive.setPower(backLeftPower * DRIVING_SPEED_MULTIPLIER);
+            backRightDrive.setPower(backRightPower * DRIVING_SPEED_MULTIPLIER);
 
             /*
-            // HEADER: Find AprilTags in the Camera's view
-            huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
-            HuskyLens.Block[] tags = huskyLens.blocks(); // tags is the value of AprilTags in view
-
-            for (int i = 0; i <= tags.length; i++) {
-                telemetry.addData("HuskyLens Tags:", tags[i].toString());
-
-                if (tags[i].id == 1) {
-
-                }
-            }
-            */
-
-            // HEADER: Set values fo the color sensor and set is up to get data
+            // HEADER: Set values fo the color sensor and set it up to get data
             colorSensor.setGain(GAIN);
             NormalizedRGBA colors = colorSensor.getNormalizedColors();
             Color.colorToHSV(colors.toColor(), hsvValues);
+             */
 
             // HEADER: Call various functions used for sorting, intake and launching
-            sort(colors.red, colors.green, colors.blue);
+            intakeBall(gamepad2.dpadUpWasPressed());
+            launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed());
 
-            intakeBall(gamepad2.dpadDownWasPressed(), gamepad2.dpadUpWasPressed());
-
-            //gamepad2.dpadUpWasPressed
-
-            launch(gamepad2.xWasPressed(), gamepad2.aWasPressed(), gamepad2.bWasPressed(), gamepad2.yWasPressed());
+            // Set sorting servo to neutral (Left Bumper).
+            if (gamepad2.leftBumperWasPressed()) {
+                sortPos = 0.5;
+                SortPaddle.setPosition(sortPos);
+            }
 
             // HEADER: Use telemetry to print any desired information to the driver hub
             // Show the elapsed game time and wheel power.
@@ -216,101 +208,67 @@ public class CompetitionTeleOp extends LinearOpMode {
         }
     }
 
-    /*
-    void sort(double red, double green, double blue){
-        double max;
-        max = red+green+blue;
-        if (red > 0.2 && red>green && blue>green && max<2.25) {
-            telemetry.addData("Color","Purple");
-            purpleGate.setPosition(OPEN);
-        }
-        else if (green>0.2 && green>red && green>blue && max<2.25) {
-            telemetry.addData("Color","Green");
-            greenGate.setPosition(OPEN);
-        }
-    }
-    */
-
-    void sort(double red, double green, double blue) {
+    void sort() {
         double max;
         switch (sortState) {
             case IDLE:
-                max = red+green+blue;
-                if (max>0.3 && max<2.25){
-                    sortState = SortState.SORTING;
-                }
+
                 break;
             case SORTING:
-                max = red+green+blue;
-                if (red > 0.2 && red>green && blue>green && max<2.25) {
-                    telemetry.addData("Color","Purple");
-                    SortPaddle.setPosition(PurpleSort);
-                    sortTimer.reset();
-                    sortState = SortState.WAIT;
-                }
-                else if (green>0.2 && green>red && green>blue && max<2.25) {
-                    telemetry.addData("Color","Green");
-                    SortPaddle.setPosition(GreenSort);
-                    sortTimer.reset();
-                    sortState = SortState.WAIT;
-                }
+
                 break;
             case WAIT:
-                if (sortTimer.seconds() > SORT_TIME_SECONDS){
-                    SortPaddle.setPosition(IdleSort);
-                    sortState = SortState.IDLE;
-                }
-                break;
-        }
-    }
-    void intakeBall(boolean Intake, boolean Outtake){
-        switch (intakeState) {
-            case IDLE:
-                if (Intake) {
-                    intakeState = IntakeState.INTAKE;
-                }
-                if (Outtake) {
-                    intakeState = IntakeState.OUTTAKE;
-                }
-                break;
-            case INTAKE:
-                intake.setPower(MAX_SPEED);
-                if (Intake) {
-                    intake.setPower(STOP_SPEED);
-                    intakeState = IntakeState.IDLE;
-                }
-                intakeState = IntakeState.HOLD;
-                break;
-            case OUTTAKE:
-                intake.setPower(MAX_SPEED_REVERSE);
-                if (Outtake) {
-                    intake.setPower(STOP_SPEED);
-                    intakeState = IntakeState.IDLE;
-                }
-                intakeState = IntakeState.HOLDTWO;
-                break;
-            case HOLD:
-                if (Intake) {
-                    intake.setPower(STOP_SPEED);
-                    intakeState = IntakeState.IDLE;
-                }
-                if (Outtake) {
-                    intakeState = IntakeState.OUTTAKE;
-                }
-                break;
-            case HOLDTWO:
-                if (Intake) {
-                    intakeState = IntakeState.INTAKE;
-                }
-                if (Outtake) {
-                    intake.setPower(STOP_SPEED);
-                    intakeState = IntakeState.IDLE;
-                }
-                break;
 
+                break;
         }
     }
-    void launch(boolean slowShotRequested, boolean fastShotRequested, boolean greenShotRequested, boolean purpleShotRequested){
+
+    void intakeBall(boolean Intake){
+        if (Intake) {
+            sortPos += 1;
+            if (sortPos > 1) {
+                sortPos = 0;
+            }
+            SortPaddle.setPosition(sortPos);
+
+            intake.setPower(MAX_SPEED);
+            intakeTimer.reset();
+        }
+        if (intakeTimer.seconds() >= INTAKE_TIME_SECONDS) {
+            intake.setPower(STOP_SPEED);
+        }
+    }
+    void launch(boolean shotRequested, boolean leftShotRequested,boolean rightShotRequested) {
+        double distance = GetDistance();
+        double power;
+        if (distance < 130) {
+            power = 1300;
+        } else if (distance > 240) {
+            power = 1475;
+        } else {
+            power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+        }
+        double minPower = power - 100;
+
+        if (shotRequested) {
+            launcher.setVelocity(power);
+        }
+
+        if (rightShotRequested && launcher.getVelocity() > minPower) {
+            rightFeeder.setPower(MAX_SPEED);
+            feederTimer.reset();
+        }
+
+        if (leftShotRequested && launcher.getVelocity() > minPower) {
+            leftFeeder.setPower(MAX_SPEED);
+            feederTimer.reset();
+        }
+
+        if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
+            leftFeeder.setPower(STOP_SPEED);
+            rightFeeder.setPower(STOP_SPEED);
+        }
+        /*
         switch (launchState) {
             case IDLE:
                 if (fastShotRequested) {
@@ -352,5 +310,22 @@ public class CompetitionTeleOp extends LinearOpMode {
                 }
                 break;
         }
+         */
+    }
+    double GetDistance() {
+        double distance = 0;
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        for (int i = 0; i < blocks.length; i++) {
+            if (blocks[i].id == GoalID) {
+                double area = blocks[i].width * blocks[i].height;
+                distance = Math.pow((area / 16139259.8), (1 / -1.89076));
+
+                if (blocks[i].x > 145 && blocks[i].x < 175) {
+                    gamepad1.rumble(100);
+                    gamepad2.rumble(100);
+                }
+            }
+        }
+        return distance;
     }
 }
