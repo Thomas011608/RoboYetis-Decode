@@ -120,7 +120,7 @@ public class DistanceLauncherSpeed extends LinearOpMode {
             }
 
             double distance = GetDistance();
-            telemetry.addData("GetDistance", distance);
+            telemetry.addData("getDistance", distance);
             //double power = 0.117582*(Math.pow(distance,2)) - 37.19797*distance + 4136.25617;
             //double power = 0.0610355*(Math.pow(distance,2)) - 19.20547*distance + 2718.58097;
             double power;
