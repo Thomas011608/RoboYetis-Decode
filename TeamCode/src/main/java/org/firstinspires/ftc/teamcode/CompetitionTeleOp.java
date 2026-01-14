@@ -272,51 +272,6 @@ public class CompetitionTeleOp extends LinearOpMode {
             return "Idle";
         }
         return "Idle";
-
-        /*
-        //HEADER: Old launch() function
-        switch (launchState) {
-            case IDLE:
-                if (fastShotRequested) {
-                    launchState = LaunchState.SPIN_UP_FAST;
-                }
-                if (slowShotRequested) {
-                    launchState = LaunchState.SPIN_UP_SLOW;
-                }
-                break;
-            case SPIN_UP_FAST:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_FAST);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY_FAST) {
-                    launchState = LaunchState.LAUNCH;
-                }
-                break;
-            case SPIN_UP_SLOW:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY_SLOW);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY_SLOW) {
-                    launchState = LaunchState.LAUNCH;
-                }
-                break;
-            case LAUNCH:
-                if (purpleShotRequested){
-                    rightFeeder.setPower(MAX_SPEED);
-                    feederTimer.reset();
-                    launchState = LaunchState.SPIN_DOWN;
-                }
-                if (greenShotRequested){
-                    leftFeeder.setPower(MAX_SPEED);
-                    feederTimer.reset();
-                    launchState = LaunchState.SPIN_DOWN;
-                }
-                break;
-            case SPIN_DOWN:
-                if (feederTimer.seconds() > FEED_TIME_SECONDS) {
-                    launcher.setVelocity(STOP_SPEED);
-                    leftFeeder.setPower(STOP_SPEED);
-                    launchState = LaunchState.IDLE;
-                }
-                break;
-        }
-         */
     }
 
     // HEADER: getDistance() function
