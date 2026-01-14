@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 
-@TeleOp(name="CompetitionTeleOp", group="Linear OpMode")
+@TeleOp(name = "CompetitionTeleOp", group = "Linear OpMode")
 public class CompetitionTeleOp extends LinearOpMode {
 
     // HEADER: Declare OpMode members for each of the motors.
@@ -31,15 +31,11 @@ public class CompetitionTeleOp extends LinearOpMode {
     // HEADER: Defining timers
     ElapsedTime feederTimer = new ElapsedTime();
     ElapsedTime launchTimer = new ElapsedTime();
-    ElapsedTime intakeTimer = new ElapsedTime();
-    ElapsedTime sortTimer = new ElapsedTime();
 
     // HEADER: Defining final variables
     final double LAUNCH_TIME_SECONDS = 5.0; //The maximum time that the launcher is on for
-    final double INTAKE_TOTAL_TIME_SECONDS = 2.5; // This value MUST be greater than SORT_// TIME_SECONDS!
+    final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
     final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
-    final double SORT_TIME_SECONDS = 0.5; // This value MUST be less than INTAKE_TIME_SECONDS!
-    final double INTAKE_TIME_SECONDS = INTAKE_TOTAL_TIME_SECONDS - SORT_TIME_SECONDS;
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double MAX_SPEED_REVERSE = -1.0;
     final double HOLD_SPEED = 0.6;
@@ -55,10 +51,12 @@ public class CompetitionTeleOp extends LinearOpMode {
     // HEADER: Define other variables
     private int GoalID = 0;
     private boolean AdaptiveLaunchSpeed = true;
+    private boolean intakeState = false;
+    private boolean intakeBack = false;
+    private String launchState = "Idle";
 
     @Override
     public void runOpMode() {
-
         // HEADER: Get the Alliance data from Gamepad 1
         telemetry.addData("Alliance", "Gamepad 1 press D-Pad Up for Red, D-Pad Down for Blue");
         telemetry.update();
@@ -168,17 +166,21 @@ public class CompetitionTeleOp extends LinearOpMode {
             backLeftDrive.setPower(backLeftPower * DRIVING_SPEED_MULTIPLIER);
             backRightDrive.setPower(backRightPower * DRIVING_SPEED_MULTIPLIER);
 
-            // HEADER: Set Adaptive Launcher Speed and Servo Position
-            // Set sorting servo to neutral (D-Pad Up).
-            if (gamepad2.dpadUpWasPressed()) {
-                SortPaddle.setPosition(idleSort);
-            }
-
+            // HEADER: Set launch speed and intake state
             //Set Adaptive Launcher Speed (Right Bumper)
             if (gamepad2.rightBumperWasPressed()) {
                 AdaptiveLaunchSpeed = !AdaptiveLaunchSpeed;
             }
             telemetry.addData("Adaptive Launch Speed", AdaptiveLaunchSpeed);
+
+            // Set intakeState
+            if (gamepad2.dpadDownWasPressed()) {
+                intakeState = !intakeState;
+            }
+            // Set intakeBack
+            if (gamepad2.leftBumperWasPressed()) {
+                intakeBack = !intakeBack;
+            }
 
             /*
             // HEADER: Set values fo the color sensor and set it up to get data
@@ -188,13 +190,11 @@ public class CompetitionTeleOp extends LinearOpMode {
              */
 
             // HEADER: Call various functions used for intake and launching
-            intakeBall(gamepad2.dpadLeftWasPressed(), gamepad2.dpadRightWasPressed());
-            String launchState = launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed(), AdaptiveLaunchSpeed);
+            intakeBall();
+            launchState = launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed(), AdaptiveLaunchSpeed);
+            sort(gamepad2.dpadLeftWasPressed(), gamepad2.dpadUpWasPressed(), gamepad2.dpadRightWasPressed());
 
             // HEADER: Use telemetry to print any desired information to the driver hub
-            // Show the elapsed game time and wheel power.
-            telemetry.addData("Intake Timer", intakeTimer.seconds());
-            telemetry.addData("Sort Timer", sortTimer.seconds());
 
             telemetry.addData("State", launchState);
             telemetry.addData("Motor Speed", launcher.getVelocity());
@@ -203,21 +203,31 @@ public class CompetitionTeleOp extends LinearOpMode {
         }
     }
 
-    // HEADER: intakeBall() function
-    void intakeBall(boolean leftIntake, boolean rightIntake){
-        if (leftIntake) {
-            SortPaddle.setPosition(rightSort);
-            sortTimer.reset();
-            intakeTimer.reset();
-        }
-        if (rightIntake) {
-            SortPaddle.setPosition(leftSort);
-            sortTimer.reset();
-            intakeTimer.reset();
+    //HEADER: sort() function
+    void sort(boolean Left, boolean Idle, boolean Right) {
+        // Set sorting servo to neutral (D-Pad Up).
+        if (Idle) {
+            SortPaddle.setPosition(idleSort);
         }
 
-        if ((sortTimer.seconds() >= SORT_TIME_SECONDS) && (intakeTimer.seconds() < INTAKE_TIME_SECONDS)) {
+        // Set sorting servo to right (D-Pad Right)
+        if (Right) {
+            SortPaddle.setPosition(rightSort);
+        }
+
+        // Set sorting servo to left (D-Pad Left)
+        if (Left) {
+            SortPaddle.setPosition(leftSort);
+        }
+    }
+
+    // HEADER: intakeBall() function
+    void intakeBall(){
+
+        if (intakeState) {
             intake.setPower(MAX_SPEED);
+        } else if (intakeBack) {
+            intake.setPower(MAX_SPEED_REVERSE);
         } else {
             intake.setPower(STOP_SPEED);
         }
@@ -247,6 +257,10 @@ public class CompetitionTeleOp extends LinearOpMode {
         telemetry.addData("Power", power);
 
         if (shotRequested) {
+            intakeState = false;
+            intakeBack = false;
+            intakeBall();
+
             launcher.setVelocity(power);
             launchTimer.reset();
             return "Spin Up";
@@ -283,7 +297,7 @@ public class CompetitionTeleOp extends LinearOpMode {
                 double area = block.width * block.height;
                 distance = Math.pow((area / 16139259.8), (1 / -1.89076));
 
-                if (block.x > 145 && block.x < 175) {
+                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0) {
                     gamepad1.rumble(100);
                     gamepad2.rumble(100);
                 }
