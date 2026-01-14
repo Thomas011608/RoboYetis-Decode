@@ -134,4 +134,8 @@ public class CompetitionAutonomous extends LinearOpMode {
 
 
     }
+
+    public static void moveForward(double seconds) {
+
+    }
 }

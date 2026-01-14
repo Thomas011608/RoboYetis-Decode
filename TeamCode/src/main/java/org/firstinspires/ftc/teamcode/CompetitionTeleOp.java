@@ -48,15 +48,21 @@ public class CompetitionTeleOp extends LinearOpMode {
     final double DRIVING_SPEED_MULTIPLIER = 0.8;
     final float GAIN = 12;
 
+    private enum IntakeState {
+        IDLE,
+        INTAKE,
+        OUTTAKE
+    }
+
     // HEADER: Define other variables
     private int GoalID = 0;
     private boolean AdaptiveLaunchSpeed = true;
-    private boolean intakeState = false;
-    private boolean intakeBack = false;
     private String launchState = "Idle";
+    private IntakeState intakeState;
 
     @Override
     public void runOpMode() {
+
         // HEADER: Get the Alliance data from Gamepad 1
         telemetry.addData("Alliance", "Gamepad 1 press D-Pad Up for Red, D-Pad Down for Blue");
         telemetry.update();
@@ -173,15 +179,6 @@ public class CompetitionTeleOp extends LinearOpMode {
             }
             telemetry.addData("Adaptive Launch Speed", AdaptiveLaunchSpeed);
 
-            // Set intakeState
-            if (gamepad2.dpadDownWasPressed()) {
-                intakeState = !intakeState;
-            }
-            // Set intakeBack
-            if (gamepad2.leftBumperWasPressed()) {
-                intakeBack = !intakeBack;
-            }
-
             /*
             // HEADER: Set values fo the color sensor and set it up to get data
             colorSensor.setGain(GAIN);
@@ -223,7 +220,19 @@ public class CompetitionTeleOp extends LinearOpMode {
 
     // HEADER: intakeBall() function
     void intakeBall(){
+        switch (intakeState) {
+            case IDLE: {
 
+            }
+            case INTAKE: {
+
+            }
+            case OUTTAKE: {
+
+            }
+        }
+
+        /*
         if (intakeState) {
             intake.setPower(MAX_SPEED);
         } else if (intakeBack) {
@@ -231,6 +240,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         } else {
             intake.setPower(STOP_SPEED);
         }
+         */
     }
 
     // HEADER: launch() function
@@ -257,8 +267,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         telemetry.addData("Power", power);
 
         if (shotRequested) {
-            intakeState = false;
-            intakeBack = false;
+            intakeState = IntakeState.IDLE;
             intakeBall();
 
             launcher.setVelocity(power);
