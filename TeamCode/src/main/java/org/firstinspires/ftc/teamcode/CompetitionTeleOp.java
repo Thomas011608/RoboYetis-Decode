@@ -58,7 +58,7 @@ public class CompetitionTeleOp extends LinearOpMode {
     private int GoalID = 0;
     private boolean AdaptiveLaunchSpeed = true;
     private String launchState = "Idle";
-    private IntakeState intakeState;
+    private IntakeState intakeState = IntakeState.IDLE;
 
     @Override
     public void runOpMode() {
@@ -187,13 +187,13 @@ public class CompetitionTeleOp extends LinearOpMode {
              */
 
             // HEADER: Call various functions used for intake and launching
-            intakeBall();
+            intakeBall (gamepad2.dpadDownWasPressed(), gamepad2.leftBumperWasPressed());
             launchState = launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed(), AdaptiveLaunchSpeed);
             sort(gamepad2.dpadLeftWasPressed(), gamepad2.dpadUpWasPressed(), gamepad2.dpadRightWasPressed());
 
             // HEADER: Use telemetry to print any desired information to the driver hub
-
-            telemetry.addData("State", launchState);
+            telemetry.addData("Launch State", launchState);
+            telemetry.addData("Intake State", intakeState);
             telemetry.addData("Motor Speed", launcher.getVelocity());
 
             telemetry.update();
@@ -219,16 +219,40 @@ public class CompetitionTeleOp extends LinearOpMode {
     }
 
     // HEADER: intakeBall() function
-    void intakeBall(){
+    void intakeBall(boolean in, boolean out){
         switch (intakeState) {
             case IDLE: {
-
+                intake.setPower(STOP_SPEED);
+                if(in) {
+                    intakeState = IntakeState.INTAKE;
+                }
+                if(out) {
+                    intakeState = IntakeState.OUTTAKE;
+                }
+                break;
             }
             case INTAKE: {
+                intake.setPower(MAX_SPEED);
+                if(in) {
+                    intakeState = IntakeState.IDLE;
+                }
+                if(out){
+                    intake.setPower(STOP_SPEED);
+                    intakeState = IntakeState.OUTTAKE;
+                }
+                break;
 
             }
             case OUTTAKE: {
-
+                intake.setPower(MAX_SPEED_REVERSE);
+                if(in){
+                    intake.setPower(STOP_SPEED);
+                    intakeState = IntakeState.INTAKE;
+                }
+                if(out){
+                    intakeState = IntakeState.IDLE;
+                }
+                break;
             }
         }
 
@@ -268,7 +292,7 @@ public class CompetitionTeleOp extends LinearOpMode {
 
         if (shotRequested) {
             intakeState = IntakeState.IDLE;
-            intakeBall();
+            //intakeBall(false,false);
 
             launcher.setVelocity(power);
             launchTimer.reset();
