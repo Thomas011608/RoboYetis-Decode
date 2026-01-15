@@ -47,7 +47,14 @@ public class CompetitionTeleOp extends LinearOpMode {
     final double LAUNCHER_TARGET_VELOCITY_SLOW = 1200;
     final double DRIVING_SPEED_MULTIPLIER = 0.8;
     final float GAIN = 12;
-
+    private enum LaunchState{
+        IDLE,
+        QUIT,
+        LEFTLAUNCH,
+        RIGHTLAUNCH,
+        LEFTLAUNCHED,
+        RIGHTLAUNCHED,
+    }
     private enum IntakeState {
         IDLE,
         INTAKE,
