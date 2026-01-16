@@ -64,6 +64,7 @@ public class CompetitionTeleOp extends LinearOpMode {
     // HEADER: Define other variables
     private int GoalID = 0;
     private boolean AdaptiveLaunchSpeed = true;
+    private boolean LaunchRumble = false;
     private LaunchState launchState = LaunchState.IDLE;
     private IntakeState intakeState = IntakeState.IDLE;
 
@@ -171,6 +172,9 @@ public class CompetitionTeleOp extends LinearOpMode {
                 frontRightPower /= max;
                 backLeftPower /= max;
                 backRightPower /= max;
+            }
+            if (gamepad1.leftBumperWasPressed()){
+                LaunchRumble = !LaunchRumble;
             }
 
             // Send calculated power to wheels
@@ -319,6 +323,11 @@ public class CompetitionTeleOp extends LinearOpMode {
                     leftFeeder.setPower(STOP_SPEED);
                     launchState = LaunchState.IDLE;
                 }
+                if (leftShotRequested){
+                    leftFeeder.setPower(STOP_SPEED);
+                    launchState = LaunchState.SPINUP;
+
+                }
 
             }
             break;
@@ -328,7 +337,11 @@ public class CompetitionTeleOp extends LinearOpMode {
                     rightFeeder.setPower(STOP_SPEED);
                     launchState = LaunchState.IDLE;
                 }
+                if (leftShotRequested){
+                    rightFeeder.setPower(STOP_SPEED);
+                    launchState = LaunchState.SPINUP;
 
+                }
             }
             break;
             case SPINUP: {
@@ -353,16 +366,17 @@ public class CompetitionTeleOp extends LinearOpMode {
             case LEFTLAUNCH: {
                 if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
                     leftFeeder.setPower(STOP_SPEED);
+                    rightFeeder.setPower(STOP_SPEED);
                 }
                 if (rightShotRequested ){
                     launchState = LaunchState.RIGHTLAUNCH;
                     rightFeeder.setPower(MAX_SPEED);
-                    launchTimer.reset();
+                    feederTimer.reset();
                 }
                 if (leftShotRequested ) {
                     launchState = LaunchState.LEFTLAUNCH;
                     leftFeeder.setPower(MAX_SPEED);
-                    launchTimer.reset();
+                    feederTimer.reset();
                 }
                 if(quit){
                     launchState = LaunchState.IDLE;
@@ -372,16 +386,17 @@ public class CompetitionTeleOp extends LinearOpMode {
             case RIGHTLAUNCH: {
                 if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
                     rightFeeder.setPower(STOP_SPEED);
+                    leftFeeder.setPower(STOP_SPEED);
                 }
                 if (rightShotRequested ){
                     launchState = LaunchState.RIGHTLAUNCH;
                     rightFeeder.setPower(MAX_SPEED);
-                    launchTimer.reset();
+                    feederTimer.reset();
                 }
                 if (leftShotRequested ) {
                     launchState = LaunchState.LEFTLAUNCH;
                     leftFeeder.setPower(MAX_SPEED);
-                    launchTimer.reset();
+                    feederTimer.reset();
                 }
                 if(quit){
                     launchState = LaunchState.IDLE;
@@ -452,7 +467,7 @@ public class CompetitionTeleOp extends LinearOpMode {
                 double area = block.width * block.height;
                 distance = Math.pow((area / 16139259.8), (1 / -1.89076));
 
-                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0) {
+                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble == false || block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS) {
                     gamepad1.rumble(100);
                     gamepad2.rumble(100);
                 }
