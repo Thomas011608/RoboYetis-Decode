@@ -42,9 +42,8 @@ public class CompetitionAutonomous extends LinearOpMode {
     final double leftSort = 0.0;
     final double idleSort = 0.5;
     final double rightSort = 1.0;
-    final double LAUNCHER_TARGET_VELOCITY_FAST = 1400;
-    final double LAUNCHER_TARGET_VELOCITY_SLOW = 1200;
-    final double DRIVING_SPEED_MULTIPLIER = 0.8;
+    final double DRIVING_SPEED_MULTIPLIER = 0.6;
+    final double TURN_TIME_SECONDS = 0.8;
     final float GAIN = 12;
 
     // HEADER: Define other variables
@@ -53,6 +52,7 @@ public class CompetitionAutonomous extends LinearOpMode {
     private boolean intakeState = false;
     private boolean intakeBack = false;
     private String launchState = "Idle";
+    private int obeliskID = 0;
 
     @Override
     public void runOpMode() {
@@ -132,10 +132,213 @@ public class CompetitionAutonomous extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+        /*
+        //HEADER: Leg 1, move forward
+        moveForward(DRIVING_SPEED_MULTIPLIER);
+        while (opModeIsActive() && runtime.seconds() < 2) {
+            telemetry.addData("Leg","1, %4.1f Seconds", runtime.seconds());
+            telemetry.update();
+        }
+        moveForward(STOP_SPEED);
+        runtime.reset();
+
+        //HEADER: Leg 2, turn
+        turnRight(DRIVING_SPEED_MULTIPLIER);
+        while (opModeIsActive() && runtime.seconds() < TURN_TIME_SECONDS) {
+            telemetry.addData("Leg","2, %4.1f Seconds", runtime.seconds());
+            telemetry.update();
+        }
+        moveForward(STOP_SPEED);
+        runtime.reset();
+        */
+
+        //HEADER: Leg 1, Find Obelisk + Move forward
+        moveForward(0.5*DRIVING_SPEED_MULTIPLIER);
+        while (opModeIsActive()) {
+            getDistance();
+            if (obeliskID != 0 || runtime.seconds() > 5) {
+                break;
+            }
+            telemetry.addData("Leg","1 (Finding Obelisk), %4.1f Seconds", runtime.seconds());
+            telemetry.update();
+        }
+        moveForward(STOP_SPEED);
+        double forwardTime = runtime.seconds();
+        runtime.reset();
+
+        //HEADER: Leg 2, Move Backwards by almost forwardTime
+        moveForward(-0.5*DRIVING_SPEED_MULTIPLIER);
+        while  (opModeIsActive() && runtime.seconds() < forwardTime - 0.5) {
+            telemetry.addData("Leg", "2, Moving backward, %4.1f Seconds", runtime.seconds());
+        }
+        moveForward(STOP_SPEED);
+
+        //HEADER: Leg 3, Turn Left/Right to face goal
+        while (opModeIsActive() && getDistance() < 0) {
+            if (GoalID == 4) {
+                turnRight(0.5*DRIVING_SPEED_MULTIPLIER);
+            }
+            if (GoalID == 5) {
+                turnLeft(0.5*DRIVING_SPEED_MULTIPLIER);
+            }
+        }
+        moveForward(STOP_SPEED);
+
+        //HEADER: Leg 4, move forward and align
+        telemetry.addData("Leg", "Aligning");
+        telemetry.update();
+
+        double X = getXCoordinate();
+        while (X < 160 - POSITION_ALIGNMENT_PIXELS) {
+            X = getXCoordinate();
+            turnLeft(0.5*DRIVING_SPEED_MULTIPLIER);
+        }
+        while (X > 160 + POSITION_ALIGNMENT_PIXELS) {
+            X = getXCoordinate();
+            turnRight(0.5*DRIVING_SPEED_MULTIPLIER);
+        }
+
+
+        double power = getPower();
+        double minPower = power - 100;
+        telemetry.addData("Leg", "Launching at speed %4.1f", power);
+        telemetry.update();
+
+        launcher.setVelocity(power);
+
+        while (opModeIsActive() && launcher.getVelocity() < minPower) {
+            telemetry.addData("Power", power);
+            telemetry.addData("Actual Speed", launcher.getVelocity());
+            telemetry.update();
+        }
+
+        if (obeliskID == 1) {
+            greenLaunch();
+            purpleLaunch();
+
+            intake.setPower(MAX_SPEED);
+
+            purpleLaunch();
+        }
+        if (obeliskID == 2) {
+            purpleLaunch();
+            greenLaunch();
+
+            intake.setPower(MAX_SPEED);
+
+            purpleLaunch();
+        }
+        if (obeliskID == 3) {
+            purpleLaunch();
+
+            intake.setPower(MAX_SPEED);
+
+            purpleLaunch();
+            greenLaunch();
+        }
+
+        intake.setPower(STOP_SPEED);
+        launcher.setVelocity(STOP_SPEED);
+        launcher.setPower(STOP_SPEED);
 
     }
 
-    public static void moveForward(double seconds) {
+    // HEADER: moveForward() function
+    public void moveForward(double power) {
+        // Set Motor Powers
+        frontLeftDrive.setPower(power);
+        backLeftDrive.setPower(power);
+        frontRightDrive.setPower(power);
+        backRightDrive.setPower(power);
 
+        //
+    }
+
+    //HEADER: turnLeft() function
+    public void turnLeft(double power) {
+        frontLeftDrive.setPower(-power);
+        frontRightDrive.setPower(power);
+        backLeftDrive.setPower(-power);
+        backRightDrive.setPower(power);
+    }
+
+    //HEADER: turnRight() function
+    public void turnRight(double power) {
+        frontLeftDrive.setPower(DRIVING_SPEED_MULTIPLIER*power);
+        frontRightDrive.setPower(-DRIVING_SPEED_MULTIPLIER*power);
+        backLeftDrive.setPower(DRIVING_SPEED_MULTIPLIER*power);
+        backRightDrive.setPower(-DRIVING_SPEED_MULTIPLIER*power);
+    }
+
+    //HEADER: getDistance() function
+    public double getDistance() {
+        double distance = -1;
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        for (HuskyLens.Block block : blocks) {
+            if ((block.id == 1 || block.id == 2 || block.id == 3) && obeliskID == 0) {
+                obeliskID = block.id;
+            }
+            if (obeliskID != 0 && block.id == GoalID) {
+                double area = block.width * block.height;
+                distance = Math.pow((area / 16139259.8), (1 / -1.89076));
+            }
+        }
+        return distance;
+    }
+
+    //HEADER: getPower() function
+    public double getPower() {
+        double distance = getDistance();
+        while (distance == -1) {
+            distance = getDistance();
+        }
+
+        double power;
+        if (distance < 130) {
+            power = 1300;
+        } else if (distance > 240) {
+            power = 1475;
+        } else {
+            power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+        }
+        return power;
+    }
+
+    //HEADER: getXCoordinate() function
+    public double getXCoordinate() {
+        double XCoord = 0;
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        for (HuskyLens.Block block : blocks) {
+            if (block.id == GoalID) {
+                XCoord = block.x;
+            }
+        }
+        return XCoord;
+    }
+
+    //HEADER: greenLaunch() function
+    public void greenLaunch() {
+        rightFeeder.setPower(MAX_SPEED);
+        feederTimer.reset();
+
+        while (feederTimer.seconds() < FEED_TIME_SECONDS) {
+            telemetry.addData("Launch", "Green");
+        }
+
+        rightFeeder.setPower(STOP_SPEED);
+        telemetry.update();
+    }
+
+    //HEADER: purpleLaunch() function
+    public void purpleLaunch() {
+        leftFeeder.setPower(MAX_SPEED);
+        feederTimer.reset();
+
+        while (feederTimer.seconds() < FEED_TIME_SECONDS) {
+            telemetry.addData("Launch", "Purple");
+        }
+
+        leftFeeder.setPower(STOP_SPEED);
+        telemetry.update();
     }
 }
