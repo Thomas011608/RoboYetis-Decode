@@ -49,22 +49,22 @@ public class CompetitionTeleOp extends LinearOpMode {
     final float GAIN = 12;
     private enum LaunchState{
         IDLE,
-        QUIT,
+        REJECTLEFT,
+        REJECTRIGHT,
+        SPINUP,
         LEFTLAUNCH,
         RIGHTLAUNCH,
-        LEFTLAUNCHED,
-        RIGHTLAUNCHED,
     }
     private enum IntakeState {
         IDLE,
         INTAKE,
-        OUTTAKE
+        SPINUP, OUTTAKE
     }
 
     // HEADER: Define other variables
     private int GoalID = 0;
     private boolean AdaptiveLaunchSpeed = true;
-    private String launchState = "Idle";
+    private LaunchState launchState = LaunchState.IDLE;
     private IntakeState intakeState = IntakeState.IDLE;
 
     @Override
@@ -195,7 +195,7 @@ public class CompetitionTeleOp extends LinearOpMode {
 
             // HEADER: Call various functions used for intake and launching
             intakeBall (gamepad2.dpadDownWasPressed(), gamepad2.leftBumperWasPressed());
-            launchState = launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed(), AdaptiveLaunchSpeed);
+            launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed(), gamepad2.aWasPressed(), AdaptiveLaunchSpeed);
             sort(gamepad2.dpadLeftWasPressed(), gamepad2.dpadUpWasPressed(), gamepad2.dpadRightWasPressed());
 
             // HEADER: Use telemetry to print any desired information to the driver hub
@@ -275,7 +275,122 @@ public class CompetitionTeleOp extends LinearOpMode {
     }
 
     // HEADER: launch() function
-    String launch(boolean shotRequested, boolean leftShotRequested,boolean rightShotRequested, boolean adaptive) {
+    void launch(boolean shotRequested, boolean leftShotRequested,boolean rightShotRequested,boolean quit, boolean adaptive) {
+        double power;
+        power = 0;
+        switch (launchState) {
+            case IDLE: {
+               rightFeeder.setPower(STOP_SPEED);
+               leftFeeder.setPower(STOP_SPEED);
+                launcher.setPower(STOP_SPEED);
+                double distance = getDistance();
+                if (adaptive) {
+                    if (distance < 130) {
+                        power = 1300;
+                    } else if (distance > 240) {
+                        power = 1475;
+                    } else {
+                        power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+                    }
+                }else {
+                    if (distance < 240) {
+                        power = LAUNCHER_TARGET_VELOCITY_SLOW;
+                    } else {
+                        power = LAUNCHER_TARGET_VELOCITY_FAST;
+                    }
+                }
+                double minPower = power - 100;
+                telemetry.addData("Power", power);
+                if (shotRequested){
+                    launchState =   LaunchState.SPINUP;
+                }
+                if (leftShotRequested){
+                    launchState = LaunchState.REJECTLEFT;
+                }
+                if (rightShotRequested){
+                    launchState =LaunchState.REJECTRIGHT;
+                }
+            }
+            break;
+            case REJECTLEFT:{
+                leftFeeder.setPower(MAX_SPEED_REVERSE);
+                feederTimer.reset();
+                if (leftShotRequested||quit){
+                    leftFeeder.setPower(STOP_SPEED);
+                    launchState = LaunchState.IDLE;
+                }
+
+            }
+            break;
+            case REJECTRIGHT: {
+                rightFeeder.setPower(MAX_SPEED_REVERSE);
+                if (leftShotRequested||quit){
+                    rightFeeder.setPower(STOP_SPEED);
+                    launchState = LaunchState.IDLE;
+                }
+
+            }
+            break;
+            case SPINUP: {
+                intakeState = IntakeState.IDLE;
+                launcher.setVelocity(power);
+                if (launcher.getVelocity() >= power-100 && leftShotRequested) {
+                    leftFeeder.setPower(MAX_SPEED);
+                    launchTimer.reset();
+                    launchState = LaunchState.LEFTLAUNCH;
+                }
+                if (launcher.getVelocity() >= power-100 && rightShotRequested) {
+                    launchState = LaunchState.REJECTRIGHT;
+                    rightFeeder.setPower(MAX_SPEED);
+                    launchTimer.reset();
+
+                }
+                if (quit){
+                    launchState = LaunchState.IDLE;
+                }
+            }
+            break;
+            case LEFTLAUNCH: {
+                if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
+                    leftFeeder.setPower(STOP_SPEED);
+                }
+                if (rightShotRequested ){
+                    launchState = LaunchState.RIGHTLAUNCH;
+                    rightFeeder.setPower(MAX_SPEED);
+                    launchTimer.reset();
+                }
+                if (leftShotRequested ) {
+                    launchState = LaunchState.LEFTLAUNCH;
+                    leftFeeder.setPower(MAX_SPEED);
+                    launchTimer.reset();
+                }
+                if(quit){
+                    launchState = LaunchState.IDLE;
+                }
+            }
+            break;
+            case RIGHTLAUNCH: {
+                if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
+                    rightFeeder.setPower(STOP_SPEED);
+                }
+                if (rightShotRequested ){
+                    launchState = LaunchState.RIGHTLAUNCH;
+                    rightFeeder.setPower(MAX_SPEED);
+                    launchTimer.reset();
+                }
+                if (leftShotRequested ) {
+                    launchState = LaunchState.LEFTLAUNCH;
+                    leftFeeder.setPower(MAX_SPEED);
+                    launchTimer.reset();
+                }
+                if(quit){
+                    launchState = LaunchState.IDLE;
+                }
+            }
+            break;
+        }
+    }
+    /*String launch(boolean shotRequested, boolean leftShotRequested,boolean rightShotRequested, boolean adaptive) {
         double distance = getDistance();
         double power;
 
@@ -326,7 +441,7 @@ public class CompetitionTeleOp extends LinearOpMode {
             return "Idle";
         }
         return "Idle";
-    }
+    }*/
 
     // HEADER: getDistance() function
     double getDistance() {
