@@ -202,10 +202,13 @@ public class CompetitionAutonomous extends LinearOpMode {
             }
 
             if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
-                turnLeft(0.5 * DRIVING_SPEED_MULTIPLIER);
+                turnLeft(0.3 * DRIVING_SPEED_MULTIPLIER);
             }
             if (X > 160 + POSITION_ALIGNMENT_PIXELS) {
-                turnRight(0.5 * DRIVING_SPEED_MULTIPLIER);
+                turnRight(0.3 * DRIVING_SPEED_MULTIPLIER);
+            }
+            if (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS ) {
+                break;
             }
             Xprev = X;
         }
