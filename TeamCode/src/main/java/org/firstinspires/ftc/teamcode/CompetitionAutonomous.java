@@ -59,7 +59,7 @@ public class CompetitionAutonomous extends LinearOpMode {
         // HEADER: Get the Alliance data from Gamepad 1
         telemetry.addData("Alliance", "Gamepad 1 press D-Pad Up for Red, D-Pad Down for Blue");
         telemetry.update();
-        while (true) {
+        while (!opModeIsActive()) {
             if (gamepad1.dpad_up){
                 GoalID = 4;
                 telemetry.addData("Alliance","Red");
@@ -128,7 +128,6 @@ public class CompetitionAutonomous extends LinearOpMode {
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
         waitForStart();
         runtime.reset();
 
@@ -151,53 +150,65 @@ public class CompetitionAutonomous extends LinearOpMode {
         moveForward(STOP_SPEED);
         runtime.reset();
         */
-
+        runtime.reset();
         //HEADER: Leg 1, Find Obelisk + Move forward
         moveForward(0.5*DRIVING_SPEED_MULTIPLIER);
+        while (opModeIsActive() && runtime.seconds() < 0.5) {
+            telemetry.addData("Leg", "1 (Finding Obelisk), %4.1f Seconds", runtime.seconds());
+        }
+        runtime.reset();
         while (opModeIsActive()) {
             getDistance();
             if (obeliskID != 0 || runtime.seconds() > 5) {
                 break;
             }
             telemetry.addData("Leg","1 (Finding Obelisk), %4.1f Seconds", runtime.seconds());
-            telemetry.update();
         }
+        telemetry.update();
         moveForward(STOP_SPEED);
         double forwardTime = runtime.seconds();
         runtime.reset();
 
         //HEADER: Leg 2, Move Backwards by almost forwardTime
         moveForward(-0.5*DRIVING_SPEED_MULTIPLIER);
-        while  (opModeIsActive() && runtime.seconds() < forwardTime - 0.5) {
+        while  (opModeIsActive() && runtime.seconds() < forwardTime) {
             telemetry.addData("Leg", "2, Moving backward, %4.1f Seconds", runtime.seconds());
         }
         moveForward(STOP_SPEED);
 
-        //HEADER: Leg 3, Turn Left/Right to face goal
-        while (opModeIsActive() && getDistance() < 0) {
-            if (GoalID == 4) {
-                turnRight(0.5*DRIVING_SPEED_MULTIPLIER);
-            }
-            if (GoalID == 5) {
-                turnLeft(0.5*DRIVING_SPEED_MULTIPLIER);
-            }
-        }
-        moveForward(STOP_SPEED);
 
-        //HEADER: Leg 4, move forward and align
+        //HEADER: Leg 3, align
         telemetry.addData("Leg", "Aligning");
         telemetry.update();
 
-        double X = getXCoordinate();
-        while (X < 160 - POSITION_ALIGNMENT_PIXELS) {
-            X = getXCoordinate();
-            turnLeft(0.5*DRIVING_SPEED_MULTIPLIER);
+        double X;
+        double Xprev;
+        if (GoalID == 4) {
+            X = 320;
+        } else {
+            X = 0;
         }
-        while (X > 160 + POSITION_ALIGNMENT_PIXELS) {
-            X = getXCoordinate();
-            turnRight(0.5*DRIVING_SPEED_MULTIPLIER);
-        }
+        Xprev = X;
 
+        while (opModeIsActive()) {
+            telemetry.clearAll();
+            telemetry.addData("X", X);
+            telemetry.addData("Xprev", Xprev);
+            telemetry.update();
+
+            X = getXCoordinate();
+            if (X == 0 && Xprev != X) {
+                X = Xprev;
+            }
+
+            if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
+                turnLeft(0.5 * DRIVING_SPEED_MULTIPLIER);
+            }
+            if (X > 160 + POSITION_ALIGNMENT_PIXELS) {
+                turnRight(0.5 * DRIVING_SPEED_MULTIPLIER);
+            }
+            Xprev = X;
+        }
 
         double power = getPower();
         double minPower = power - 100;

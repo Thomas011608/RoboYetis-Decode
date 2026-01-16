@@ -73,7 +73,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         // HEADER: Get the Alliance data from Gamepad 1
         telemetry.addData("Alliance", "Gamepad 1 press D-Pad Up for Red, D-Pad Down for Blue");
         telemetry.update();
-        while (true) {
+        while (!opModeIsActive()) {
             if (gamepad1.dpad_up){
                 GoalID = 4;
                 telemetry.addData("Alliance","Red");
