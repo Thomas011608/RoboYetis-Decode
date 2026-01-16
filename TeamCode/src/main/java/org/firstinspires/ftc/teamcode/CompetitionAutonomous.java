@@ -6,9 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Autonomous (name = "CompetitionAutonomous", group = "Competition")
@@ -23,35 +21,21 @@ public class CompetitionAutonomous extends LinearOpMode {
     private DcMotor leftFeeder = null;
     private DcMotor rightFeeder = null;
     private DcMotor intake = null;
-    private Servo SortPaddle = null;
-    NormalizedColorSensor colorSensor;
     private HuskyLens huskyLens; //huskyLens is the variable of our camera
 
     // HEADER: Defining timers
     ElapsedTime feederTimer = new ElapsedTime();
-    ElapsedTime launchTimer = new ElapsedTime();
 
     // HEADER: Defining final variables
-    final double LAUNCH_TIME_SECONDS = 5.0; //The maximum time that the launcher is on for
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
     final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
-    final double MAX_SPEED_REVERSE = -1.0;
-    final double HOLD_SPEED = 0.6;
     final double STOP_SPEED = 0.0;
-    final double leftSort = 0.0;
-    final double idleSort = 0.5;
-    final double rightSort = 1.0;
     final double DRIVING_SPEED_MULTIPLIER = 0.6;
     final double TURN_TIME_SECONDS = 0.8;
-    final float GAIN = 12;
 
     // HEADER: Define other variables
     private int GoalID = 0;
-    private boolean AdaptiveLaunchSpeed = true;
-    private boolean intakeState = false;
-    private boolean intakeBack = false;
-    private String launchState = "Idle";
     private int obeliskID = 0;
 
     @Override
@@ -97,7 +81,7 @@ public class CompetitionAutonomous extends LinearOpMode {
         //Set Launcher Zero Power Behavior
         launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // HEADER: Feeder Servo Definitions
+        // HEADER: Feeder Motor Definitions
         leftFeeder = hardwareMap.get(DcMotor.class, "left_feeder");
         rightFeeder = hardwareMap.get(DcMotor.class, "right_feeder");
         leftFeeder.setPower(STOP_SPEED);
@@ -106,18 +90,11 @@ public class CompetitionAutonomous extends LinearOpMode {
         leftFeeder.setDirection(DcMotor.Direction.FORWARD);
         rightFeeder.setDirection(DcMotor.Direction.REVERSE);
 
-        // HEADER: Gate Servo Definitions
-        SortPaddle = hardwareMap.get(Servo.class, "sorting_gate");
-        SortPaddle.setPosition(idleSort);
-
         // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class, "intake");
         intake.setDirection(DcMotor.Direction.REVERSE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // HEADER: Color Sensor Definitions
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
-        final float[] hsvValues = new float[3];
 
         // HEADER: Camera Definitions and Initialization
         huskyLens = hardwareMap.get(HuskyLens.class, "camera");
@@ -131,56 +108,48 @@ public class CompetitionAutonomous extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        /*
-        //HEADER: Leg 1, move forward
-        moveForward(DRIVING_SPEED_MULTIPLIER);
-        while (opModeIsActive() && runtime.seconds() < 2) {
-            telemetry.addData("Leg","1, %4.1f Seconds", runtime.seconds());
-            telemetry.update();
-        }
-        moveForward(STOP_SPEED);
-        runtime.reset();
+        //HEADER: Find Obelisk + Move forward
 
-        //HEADER: Leg 2, turn
-        turnRight(DRIVING_SPEED_MULTIPLIER);
-        while (opModeIsActive() && runtime.seconds() < TURN_TIME_SECONDS) {
-            telemetry.addData("Leg","2, %4.1f Seconds", runtime.seconds());
-            telemetry.update();
-        }
-        moveForward(STOP_SPEED);
-        runtime.reset();
-        */
-        runtime.reset();
-        //HEADER: Leg 1, Find Obelisk + Move forward
+        // Move forward for 0.5 seconds
         moveForward(0.5*DRIVING_SPEED_MULTIPLIER);
         while (opModeIsActive() && runtime.seconds() < 0.5) {
-            telemetry.addData("Leg", "1 (Finding Obelisk), %4.1f Seconds", runtime.seconds());
+            telemetry.clearAll();
+            telemetry.addData("Active now", "Finding Obelisk, %4.1f Seconds", runtime.seconds());
+            telemetry.update();
         }
         runtime.reset();
+
+        //Move forward until the Obelisk is detected
         while (opModeIsActive()) {
             getDistance();
             if (obeliskID != 0 || runtime.seconds() > 5) {
                 break;
             }
-            telemetry.addData("Leg","1 (Finding Obelisk), %4.1f Seconds", runtime.seconds());
+            telemetry.clearAll();
+            telemetry.addData("Active now","Finding Obelisk, %4.1f Seconds", runtime.seconds());
+            telemetry.update();
         }
         telemetry.update();
         moveForward(STOP_SPEED);
         double forwardTime = runtime.seconds();
         runtime.reset();
 
-        //HEADER: Leg 2, Move Backwards by almost forwardTime
+        //HEADER: Leg 2, Move back to the launch zone.
         moveForward(-0.5*DRIVING_SPEED_MULTIPLIER);
         while  (opModeIsActive() && runtime.seconds() < forwardTime) {
+            telemetry.clearAll();
             telemetry.addData("Leg", "2, Moving backward, %4.1f Seconds", runtime.seconds());
+            telemetry.update();
         }
         moveForward(STOP_SPEED);
 
 
-        //HEADER: Leg 3, align
+        //HEADER: Leg 3, align with the goal
         telemetry.addData("Leg", "Aligning");
         telemetry.update();
 
+        //X and Xprev are initialized to either the rightmost or leftmost part of the screen.
+        //(for Red/Blue alliance respectively)
         double X;
         double Xprev;
         if (GoalID == 4) {
@@ -190,17 +159,21 @@ public class CompetitionAutonomous extends LinearOpMode {
         }
         Xprev = X;
 
+        //Run a loop until the X coordinate is between the position alignment.
         while (opModeIsActive()) {
             telemetry.clearAll();
             telemetry.addData("X", X);
             telemetry.addData("Xprev", Xprev);
             telemetry.update();
 
+            //If the X-coordinate is negative (X < 0), we know the tag was not detected,
+            //so we set it to the previous reading of the tag.
             X = getXCoordinate();
-            if (X == 0 && Xprev != X) {
+            if (X < 0) {
                 X = Xprev;
             }
 
+            //Turn the robot to align the tag, and if aligned, break the loop.
             if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
                 turnLeft(0.3 * DRIVING_SPEED_MULTIPLIER);
             }
@@ -210,9 +183,13 @@ public class CompetitionAutonomous extends LinearOpMode {
             if (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS ) {
                 break;
             }
+            //Update the value of Xprev.
             Xprev = X;
         }
+        moveForward(STOP_SPEED);
 
+        //HEADER: Launch the balls
+        //Set the power value & spinup the launcher.
         double power = getPower();
         double minPower = power - 100;
         telemetry.addData("Leg", "Launching at speed %4.1f", power);
@@ -221,12 +198,15 @@ public class CompetitionAutonomous extends LinearOpMode {
         launcher.setVelocity(power);
 
         while (opModeIsActive() && launcher.getVelocity() < minPower) {
+            telemetry.clearAll();
             telemetry.addData("Power", power);
             telemetry.addData("Actual Speed", launcher.getVelocity());
             telemetry.update();
         }
 
-        if (obeliskID == 1) {
+        // Launch the balls in the order dictated by the obelisk. The intake needs to be started
+        // before launching the second purple ball to ensure it is in the feeder wheels.
+        if (opModeIsActive() && obeliskID == 1) {
             greenLaunch();
             purpleLaunch();
 
@@ -234,7 +214,7 @@ public class CompetitionAutonomous extends LinearOpMode {
 
             purpleLaunch();
         }
-        if (obeliskID == 2) {
+        if (opModeIsActive() && obeliskID == 2) {
             purpleLaunch();
             greenLaunch();
 
@@ -242,7 +222,7 @@ public class CompetitionAutonomous extends LinearOpMode {
 
             purpleLaunch();
         }
-        if (obeliskID == 3) {
+        if (opModeIsActive() && obeliskID == 3) {
             purpleLaunch();
 
             intake.setPower(MAX_SPEED);
@@ -251,10 +231,12 @@ public class CompetitionAutonomous extends LinearOpMode {
             greenLaunch();
         }
 
+        //Spin down the launcher
         intake.setPower(STOP_SPEED);
         launcher.setVelocity(STOP_SPEED);
         launcher.setPower(STOP_SPEED);
 
+        stop();
     }
 
     // HEADER: moveForward() function
@@ -264,12 +246,11 @@ public class CompetitionAutonomous extends LinearOpMode {
         backLeftDrive.setPower(power);
         frontRightDrive.setPower(power);
         backRightDrive.setPower(power);
-
-        //
     }
 
     //HEADER: turnLeft() function
     public void turnLeft(double power) {
+        //Set Motor Powers
         frontLeftDrive.setPower(-power);
         frontRightDrive.setPower(power);
         backLeftDrive.setPower(-power);
@@ -278,6 +259,7 @@ public class CompetitionAutonomous extends LinearOpMode {
 
     //HEADER: turnRight() function
     public void turnRight(double power) {
+        //Set Motor Powers
         frontLeftDrive.setPower(DRIVING_SPEED_MULTIPLIER*power);
         frontRightDrive.setPower(-DRIVING_SPEED_MULTIPLIER*power);
         backLeftDrive.setPower(DRIVING_SPEED_MULTIPLIER*power);
@@ -286,6 +268,7 @@ public class CompetitionAutonomous extends LinearOpMode {
 
     //HEADER: getDistance() function
     public double getDistance() {
+        //Get the tags that the camera sees. For obelisk tags, set obeliskID, for goal tags, find distance.
         double distance = -1;
         HuskyLens.Block[] blocks = huskyLens.blocks();
         for (HuskyLens.Block block : blocks) {
@@ -293,6 +276,7 @@ public class CompetitionAutonomous extends LinearOpMode {
                 obeliskID = block.id;
             }
             if (obeliskID != 0 && block.id == GoalID) {
+                //custom distance function
                 double area = block.width * block.height;
                 distance = Math.pow((area / 16139259.8), (1 / -1.89076));
             }
@@ -302,11 +286,13 @@ public class CompetitionAutonomous extends LinearOpMode {
 
     //HEADER: getPower() function
     public double getPower() {
+        // Only set the distance after a valid distance has been measured.
         double distance = getDistance();
         while (distance == -1) {
             distance = getDistance();
         }
 
+        // Custom power function
         double power;
         if (distance < 130) {
             power = 1300;
@@ -320,7 +306,8 @@ public class CompetitionAutonomous extends LinearOpMode {
 
     //HEADER: getXCoordinate() function
     public double getXCoordinate() {
-        double XCoord = 0;
+        // The X Coordinate is defaulted to -1, if a tag is detected, the X-coordinate is set.
+        double XCoord = -1;
         HuskyLens.Block[] blocks = huskyLens.blocks();
         for (HuskyLens.Block block : blocks) {
             if (block.id == GoalID) {
@@ -332,24 +319,29 @@ public class CompetitionAutonomous extends LinearOpMode {
 
     //HEADER: greenLaunch() function
     public void greenLaunch() {
+        // The green ball is at the right side.
         rightFeeder.setPower(MAX_SPEED);
         feederTimer.reset();
 
         while (feederTimer.seconds() < FEED_TIME_SECONDS) {
+            telemetry.clearAll();
             telemetry.addData("Launch", "Green");
+            telemetry.update();
         }
 
         rightFeeder.setPower(STOP_SPEED);
-        telemetry.update();
     }
 
     //HEADER: purpleLaunch() function
     public void purpleLaunch() {
+        // The purple balls are on the left side.
         leftFeeder.setPower(MAX_SPEED);
         feederTimer.reset();
 
         while (feederTimer.seconds() < FEED_TIME_SECONDS) {
+            telemetry.clearAll();
             telemetry.addData("Launch", "Purple");
+            telemetry.update();
         }
 
         leftFeeder.setPower(STOP_SPEED);

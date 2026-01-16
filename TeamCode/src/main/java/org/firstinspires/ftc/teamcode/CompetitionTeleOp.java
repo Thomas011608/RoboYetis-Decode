@@ -111,7 +111,7 @@ public class CompetitionTeleOp extends LinearOpMode {
         //Set Launcher Zero Power Behavior
         launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // HEADER: Feeder Servo Definitions
+        // HEADER: Feeder Motor Definitions
         leftFeeder = hardwareMap.get(DcMotor.class, "left_feeder");
         rightFeeder = hardwareMap.get(DcMotor.class, "right_feeder");
         leftFeeder.setPower(STOP_SPEED);
