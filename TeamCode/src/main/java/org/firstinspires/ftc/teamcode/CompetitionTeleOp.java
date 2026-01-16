@@ -35,7 +35,7 @@ public class CompetitionTeleOp extends LinearOpMode {
     // HEADER: Defining final variables
     final double LAUNCH_TIME_SECONDS = 5.0; //The maximum time that the launcher is on for
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
-    final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME_SECONDS = 3.0; //The feeder servos run this long when a shot is requested.
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double MAX_SPEED_REVERSE = -1.0;
     final double HOLD_SPEED = 0.6;
@@ -276,33 +276,33 @@ public class CompetitionTeleOp extends LinearOpMode {
 
     // HEADER: launch() function
     void launch(boolean shotRequested, boolean leftShotRequested,boolean rightShotRequested,boolean quit, boolean adaptive) {
+        double distance = getDistance();
         double power;
-        power = 0;
+        if (adaptive) {
+            if (distance < 130) {
+                power = 1300;
+            } else if (distance > 240) {
+                power = 1475;
+            } else {
+                power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+            }
+        }else {
+            if (distance < 240) {
+                power = LAUNCHER_TARGET_VELOCITY_SLOW;
+            } else {
+                power = LAUNCHER_TARGET_VELOCITY_FAST;
+            }
+        }
         switch (launchState) {
             case IDLE: {
                rightFeeder.setPower(STOP_SPEED);
                leftFeeder.setPower(STOP_SPEED);
-                launcher.setPower(STOP_SPEED);
-                double distance = getDistance();
-                if (adaptive) {
-                    if (distance < 130) {
-                        power = 1300;
-                    } else if (distance > 240) {
-                        power = 1475;
-                    } else {
-                        power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
-                    }
-                }else {
-                    if (distance < 240) {
-                        power = LAUNCHER_TARGET_VELOCITY_SLOW;
-                    } else {
-                        power = LAUNCHER_TARGET_VELOCITY_FAST;
-                    }
-                }
+               launcher.setPower(STOP_SPEED);
+
                 double minPower = power - 100;
                 telemetry.addData("Power", power);
                 if (shotRequested){
-                    launchState =   LaunchState.SPINUP;
+                    launchState = LaunchState.SPINUP;
                 }
                 if (leftShotRequested){
                     launchState = LaunchState.REJECTLEFT;
