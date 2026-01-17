@@ -189,7 +189,7 @@ public class CompetitionTeleOp extends LinearOpMode {
                 AdaptiveLaunchSpeed = !AdaptiveLaunchSpeed;
             }
             telemetry.addData("Adaptive Launch Speed", AdaptiveLaunchSpeed);
-
+            telemetry.addData("Launch vibrate shut off", !LaunchRumble);
             /*
             // HEADER: Set values fo the color sensor and set it up to get data
             colorSensor.setGain(GAIN);
@@ -319,11 +319,11 @@ public class CompetitionTeleOp extends LinearOpMode {
             case REJECTLEFT:{
                 leftFeeder.setPower(MAX_SPEED_REVERSE);
                 feederTimer.reset();
-                if (leftShotRequested||quit){
+                if (leftShotRequested||quit||rightShotRequested){
                     leftFeeder.setPower(STOP_SPEED);
                     launchState = LaunchState.IDLE;
                 }
-                if (leftShotRequested){
+                if (shotRequested){
                     leftFeeder.setPower(STOP_SPEED);
                     launchState = LaunchState.SPINUP;
 
@@ -333,11 +333,11 @@ public class CompetitionTeleOp extends LinearOpMode {
             break;
             case REJECTRIGHT: {
                 rightFeeder.setPower(MAX_SPEED_REVERSE);
-                if (leftShotRequested||quit){
+                if (leftShotRequested||quit||rightShotRequested){
                     rightFeeder.setPower(STOP_SPEED);
                     launchState = LaunchState.IDLE;
                 }
-                if (leftShotRequested){
+                if (shotRequested){
                     rightFeeder.setPower(STOP_SPEED);
                     launchState = LaunchState.SPINUP;
 
