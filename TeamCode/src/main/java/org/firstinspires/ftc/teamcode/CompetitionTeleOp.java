@@ -39,7 +39,8 @@ public class CompetitionTeleOp extends LinearOpMode {
     // HEADER: Defining final variables
     final double LAUNCH_TIME_SECONDS = 5.0; //The maximum time that the launcher is on for
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
-    final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME_SECONDS = 0.5; //The feeder servos run this long when a shot is requested.
+    final double INTAKE_TIMER = 1.0;
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double MAX_SPEED_REVERSE = -1.0;
     final double HOLD_SPEED = 0.6;
@@ -370,12 +371,16 @@ public class CompetitionTeleOp extends LinearOpMode {
                             turnLeft(STOP_SPEED);
                             if (launcher.getVelocity() >= power - 100 && leftShotRequested) {
                                 leftFeeder.setPower(MAX_SPEED);
+                                intake.setPower(MAX_SPEED);
                                 launchTimer.reset();
+                                feederTimer.reset();
                                 launchState = LaunchState.LEFTLAUNCH;
                             }
                             if (launcher.getVelocity() >= power - 100 && rightShotRequested) {
                                 rightFeeder.setPower(MAX_SPEED);
+                                intake.setPower(MAX_SPEED);
                                 launchTimer.reset();
+                                feederTimer.reset();
                                 launchState = LaunchState.RIGHTLAUNCH;
                             }
                         }
@@ -389,6 +394,10 @@ public class CompetitionTeleOp extends LinearOpMode {
             }
             break;
             case LEFTLAUNCH: {
+                launcher.setVelocity(power);
+                if (launchTimer.seconds() >= INTAKE_TIMER){
+                    intake.setPower(STOP_SPEED);
+                }
                 if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
                     leftFeeder.setPower(STOP_SPEED);
                     rightFeeder.setPower(STOP_SPEED);
@@ -396,19 +405,27 @@ public class CompetitionTeleOp extends LinearOpMode {
                 if (rightShotRequested && launcher.getVelocity() >= power-100 ){
                     launchState = LaunchState.RIGHTLAUNCH;
                     rightFeeder.setPower(MAX_SPEED);
+                    intake.setPower(MAX_SPEED);
+                    launchTimer.reset();
                     feederTimer.reset();
                 }
                 if (leftShotRequested && launcher.getVelocity() >= power-100 ) {
                     launchState = LaunchState.LEFTLAUNCH;
                     leftFeeder.setPower(MAX_SPEED);
+                    intake.setPower(MAX_SPEED);
+                    launchTimer.reset();
                     feederTimer.reset();
                 }
-                if(quit){
+                if(quit || shotRequested){
                     launchState = LaunchState.IDLE;
                 }
             }
             break;
             case RIGHTLAUNCH: {
+                launcher.setVelocity(power);
+                if (launchTimer.seconds() >= INTAKE_TIMER) {
+                    intake.setPower(STOP_SPEED);
+                }
                 if (feederTimer.seconds() >= FEED_TIME_SECONDS) {
                     rightFeeder.setPower(STOP_SPEED);
                     leftFeeder.setPower(STOP_SPEED);
@@ -416,14 +433,18 @@ public class CompetitionTeleOp extends LinearOpMode {
                 if (rightShotRequested && launcher.getVelocity() >= power-100){
                     launchState = LaunchState.RIGHTLAUNCH;
                     rightFeeder.setPower(MAX_SPEED);
+                    intake.setPower(MAX_SPEED);
+                    launchTimer.reset();
                     feederTimer.reset();
                 }
                 if (leftShotRequested && launcher.getVelocity() >= power-100) {
                     launchState = LaunchState.LEFTLAUNCH;
                     leftFeeder.setPower(MAX_SPEED);
+                    intake.setPower(MAX_SPEED);
+                    launchTimer.reset();
                     feederTimer.reset();
                 }
-                if(quit){
+                if(quit || shotRequested){
                     launchState = LaunchState.IDLE;
                 }
             }
