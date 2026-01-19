@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.graphics.Color;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -16,6 +17,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 
+@Disabled
 @TeleOp(name="IndividualTeleOp", group="Linear OpMode")
 public class IndividualTeleOp extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
