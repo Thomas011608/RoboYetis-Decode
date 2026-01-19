@@ -108,7 +108,30 @@ public class CompetitionAutonomous extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        //HEADER: Find Obelisk + Move forward
+        launcher.setVelocity(1525);
+
+        while (launcher.getVelocity()<1475){
+
+        }
+
+        purpleLaunch();
+        greenLaunch();
+        intake.setPower(MAX_SPEED);
+        purpleLaunch();
+        intake.setPower(STOP_SPEED);
+
+        sleep(1000);
+
+        launcher.setVelocity(STOP_SPEED);
+
+        moveForward(0.8);
+
+        sleep(500);
+
+        moveForward(STOP_SPEED);
+        stop();
+
+        /*//HEADER: Find Obelisk + Move forward
 
         // Move forward for 0.5 seconds
         moveForward(0.5*DRIVING_SPEED_MULTIPLIER);
@@ -236,7 +259,7 @@ public class CompetitionAutonomous extends LinearOpMode {
         launcher.setVelocity(STOP_SPEED);
         launcher.setPower(STOP_SPEED);
 
-        stop();
+        stop();*/
     }
 
     // HEADER: moveForward() function

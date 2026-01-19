@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -13,6 +14,7 @@ import com.qualcomm.hardware.dfrobot.HuskyLens;
 
 @TeleOp(name = "CompetitionTeleOp", group = "Linear OpMode")
 public class CompetitionTeleOp extends LinearOpMode {
+    double distance = 0;
 
     // HEADER: Declare OpMode members for each of the motors.
     private ElapsedTime runtime = new ElapsedTime();
@@ -45,7 +47,7 @@ public class CompetitionTeleOp extends LinearOpMode {
     final double rightSort = 1.0;
     final double LAUNCHER_TARGET_VELOCITY_FAST = 1400;
     final double LAUNCHER_TARGET_VELOCITY_SLOW = 1200;
-    final double DRIVING_SPEED_MULTIPLIER = 0.8;
+    final double DRIVING_SPEED_MULTIPLIER = 1.0;
     final float GAIN = 12;
     private enum LaunchState{
         IDLE,
@@ -67,6 +69,7 @@ public class CompetitionTeleOp extends LinearOpMode {
     private boolean LaunchRumble = false;
     private LaunchState launchState = LaunchState.IDLE;
     private IntakeState intakeState = IntakeState.IDLE;
+    private double Xprev = -1;
 
     @Override
     public void runOpMode() {
@@ -297,6 +300,7 @@ public class CompetitionTeleOp extends LinearOpMode {
                 power = LAUNCHER_TARGET_VELOCITY_FAST;
             }
         }
+        telemetry.addData("Target Power", power);
         switch (launchState) {
             case IDLE: {
                rightFeeder.setPower(STOP_SPEED);
@@ -304,7 +308,6 @@ public class CompetitionTeleOp extends LinearOpMode {
                launcher.setPower(STOP_SPEED);
 
                 double minPower = power - 100;
-                telemetry.addData("Power", power);
                 if (shotRequested){
                     launchState = LaunchState.SPINUP;
                 }
@@ -347,17 +350,35 @@ public class CompetitionTeleOp extends LinearOpMode {
             case SPINUP: {
                 intakeState = IntakeState.IDLE;
                 launcher.setVelocity(power);
-                if (launcher.getVelocity() >= power-100 && leftShotRequested) {
-                    leftFeeder.setPower(MAX_SPEED);
-                    launchTimer.reset();
-                    launchState = LaunchState.LEFTLAUNCH;
-                }
-                if (launcher.getVelocity() >= power-100 && rightShotRequested) {
-                    launchState = LaunchState.REJECTRIGHT;
-                    rightFeeder.setPower(MAX_SPEED);
-                    launchTimer.reset();
 
+                double X = getCenterX();
+                if (X == -1) {
+                    X = Xprev;
                 }
+
+                if (X != -1) {
+                    if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
+                        turnLeft(0.4 * DRIVING_SPEED_MULTIPLIER);
+                    }
+                    if (X > 160 + POSITION_ALIGNMENT_PIXELS) {
+                        turnRight(0.4 * DRIVING_SPEED_MULTIPLIER);
+                    }
+                    if (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS) {
+                        turnLeft(STOP_SPEED);
+                        if (launcher.getVelocity() >= power - 100 && leftShotRequested) {
+                            leftFeeder.setPower(MAX_SPEED);
+                            launchTimer.reset();
+                            launchState = LaunchState.LEFTLAUNCH;
+                        }
+                        if (launcher.getVelocity() >= power - 100 && rightShotRequested) {
+                            rightFeeder.setPower(MAX_SPEED);
+                            launchTimer.reset();
+                            launchState = LaunchState.RIGHTLAUNCH;
+                        }
+                    }
+                }
+                Xprev = X;
+
                 if (quit){
                     launchState = LaunchState.IDLE;
                 }
@@ -368,12 +389,12 @@ public class CompetitionTeleOp extends LinearOpMode {
                     leftFeeder.setPower(STOP_SPEED);
                     rightFeeder.setPower(STOP_SPEED);
                 }
-                if (rightShotRequested ){
+                if (rightShotRequested && launcher.getVelocity() >= power-100 ){
                     launchState = LaunchState.RIGHTLAUNCH;
                     rightFeeder.setPower(MAX_SPEED);
                     feederTimer.reset();
                 }
-                if (leftShotRequested ) {
+                if (leftShotRequested && launcher.getVelocity() >= power-100 ) {
                     launchState = LaunchState.LEFTLAUNCH;
                     leftFeeder.setPower(MAX_SPEED);
                     feederTimer.reset();
@@ -388,12 +409,12 @@ public class CompetitionTeleOp extends LinearOpMode {
                     rightFeeder.setPower(STOP_SPEED);
                     leftFeeder.setPower(STOP_SPEED);
                 }
-                if (rightShotRequested ){
+                if (rightShotRequested && launcher.getVelocity() >= power-100){
                     launchState = LaunchState.RIGHTLAUNCH;
                     rightFeeder.setPower(MAX_SPEED);
                     feederTimer.reset();
                 }
-                if (leftShotRequested ) {
+                if (leftShotRequested && launcher.getVelocity() >= power-100) {
                     launchState = LaunchState.LEFTLAUNCH;
                     leftFeeder.setPower(MAX_SPEED);
                     feederTimer.reset();
@@ -460,7 +481,6 @@ public class CompetitionTeleOp extends LinearOpMode {
 
     // HEADER: getDistance() function
     double getDistance() {
-        double distance = 0;
         HuskyLens.Block[] blocks = huskyLens.blocks();
         for (HuskyLens.Block block : blocks) {
             if (block.id == GoalID) {
@@ -475,5 +495,35 @@ public class CompetitionTeleOp extends LinearOpMode {
         }
         telemetry.addData("Distance", distance);
         return distance;
+    }
+
+    double getCenterX() {
+        double X = -1;
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        for (HuskyLens.Block block : blocks) {
+            if (block.id == GoalID) {
+                X = block.x;
+            }
+        }
+        telemetry.addData("X", X);
+        return X;
+    }
+
+    //HEADER: turnLeft() function
+    public void turnLeft(double power) {
+        //Set Motor Powers
+        frontLeftDrive.setPower(-power);
+        frontRightDrive.setPower(power);
+        backLeftDrive.setPower(-power);
+        backRightDrive.setPower(power);
+    }
+
+    //HEADER: turnRight() function
+    public void turnRight(double power) {
+        //Set Motor Powers
+        frontLeftDrive.setPower(DRIVING_SPEED_MULTIPLIER*power);
+        frontRightDrive.setPower(-DRIVING_SPEED_MULTIPLIER*power);
+        backLeftDrive.setPower(DRIVING_SPEED_MULTIPLIER*power);
+        backRightDrive.setPower(-DRIVING_SPEED_MULTIPLIER*power);
     }
 }
