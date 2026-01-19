@@ -62,7 +62,8 @@ public class CompetitionTeleOp extends LinearOpMode {
     private enum IntakeState {
         IDLE,
         INTAKE,
-        SPINUP, OUTTAKE
+        SPINUP,
+        OUTTAKE
     }
 
     // HEADER: Define other variables
@@ -357,25 +358,26 @@ public class CompetitionTeleOp extends LinearOpMode {
                 if (X == -1) {
                     X = Xprev;
                 }
-
-                if (X != -1) {
-                    if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
-                        turnLeft(0.4 * DRIVING_SPEED_MULTIPLIER);
-                    }
-                    if (X > 160 + POSITION_ALIGNMENT_PIXELS) {
-                        turnRight(0.4 * DRIVING_SPEED_MULTIPLIER);
-                    }
-                    if (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS) {
-                        turnLeft(STOP_SPEED);
-                        if (launcher.getVelocity() >= power - 100 && leftShotRequested) {
-                            leftFeeder.setPower(MAX_SPEED);
-                            launchTimer.reset();
-                            launchState = LaunchState.LEFTLAUNCH;
+                if (gamepad1.left_stick_x == 0 && gamepad1.left_stick_y == 0 && gamepad1.right_stick_x == 0){
+                    if (X != -1) {
+                        if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
+                            turnLeft(0.6 * DRIVING_SPEED_MULTIPLIER);
                         }
-                        if (launcher.getVelocity() >= power - 100 && rightShotRequested) {
-                            rightFeeder.setPower(MAX_SPEED);
-                            launchTimer.reset();
-                            launchState = LaunchState.RIGHTLAUNCH;
+                        if (X > 160 + POSITION_ALIGNMENT_PIXELS) {
+                            turnRight(0.6 * DRIVING_SPEED_MULTIPLIER);
+                        }
+                        if (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS) {
+                            turnLeft(STOP_SPEED);
+                            if (launcher.getVelocity() >= power - 100 && leftShotRequested) {
+                                leftFeeder.setPower(MAX_SPEED);
+                                launchTimer.reset();
+                                launchState = LaunchState.LEFTLAUNCH;
+                            }
+                            if (launcher.getVelocity() >= power - 100 && rightShotRequested) {
+                                rightFeeder.setPower(MAX_SPEED);
+                                launchTimer.reset();
+                                launchState = LaunchState.RIGHTLAUNCH;
+                            }
                         }
                     }
                 }
