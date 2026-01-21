@@ -82,14 +82,14 @@ public class CompetitionTeleOp extends LinearOpMode {
         telemetry.addData("Alliance", "Gamepad 1 press D-Pad Up for Red, D-Pad Down for Blue");
         telemetry.update();
         while (!opModeIsActive()) {
-            if (gamepad1.dpad_up){
+            if (gamepad1.dpad_up) {
                 GoalID = 4;
-                telemetry.addData("Alliance","Red");
+                telemetry.addData("Alliance", "Red");
                 break;
             }
             if (gamepad1.dpad_down) {
                 GoalID = 5;
-                telemetry.addData("Alliance","Blue");
+                telemetry.addData("Alliance", "Blue");
                 break;
             }
         }
@@ -180,7 +180,7 @@ public class CompetitionTeleOp extends LinearOpMode {
                 backLeftPower /= max;
                 backRightPower /= max;
             }
-            if (gamepad1.leftBumperWasPressed()){
+            if (gamepad1.leftBumperWasPressed()) {
                 LaunchRumble = !LaunchRumble;
             }
 
@@ -205,7 +205,7 @@ public class CompetitionTeleOp extends LinearOpMode {
              */
 
             // HEADER: Call various functions used for intake and launching
-            intakeBall (gamepad2.dpadDownWasPressed(), gamepad2.leftBumperWasPressed());
+            intakeBall(gamepad2.dpadDownWasPressed(), gamepad2.leftBumperWasPressed());
             launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed(), gamepad2.aWasPressed(), AdaptiveLaunchSpeed);
             sort(gamepad2.dpadLeftWasPressed(), gamepad2.dpadUpWasPressed(), gamepad2.dpadRightWasPressed());
 
