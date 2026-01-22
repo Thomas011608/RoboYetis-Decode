@@ -27,10 +27,12 @@ public class CompetitionAutonomous extends LinearOpMode {
 
     // HEADER: Defining timers
     ElapsedTime feederTimer = new ElapsedTime();
+    ElapsedTime intakeTimer = new ElapsedTime();
 
     // HEADER: Defining final variables
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
     final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.
+    final double INTAKE_TIME_SECONDS = 1.0;
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double STOP_SPEED = 0.0;
     final double DRIVING_SPEED_MULTIPLIER = 0.6;

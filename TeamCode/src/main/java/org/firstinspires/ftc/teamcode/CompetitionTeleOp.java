@@ -127,6 +127,8 @@ public class CompetitionTeleOp extends LinearOpMode {
         //Set Servo Direction
         leftFeeder.setDirection(DcMotor.Direction.FORWARD);
         rightFeeder.setDirection(DcMotor.Direction.REVERSE);
+        rightFeeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftFeeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // HEADER: Gate Servo Definitions
         SortPaddle = hardwareMap.get(Servo.class, "sorting_gate");

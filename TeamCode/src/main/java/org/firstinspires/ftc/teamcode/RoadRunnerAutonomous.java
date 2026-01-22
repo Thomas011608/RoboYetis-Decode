@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -17,37 +18,114 @@ import com.acmerobotics.roadrunner.ParallelAction;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import java.util.Set;
 
 @Config
 @Autonomous(name = "RoadRunnerAutonomous", group = "Competition")
 public class RoadRunnerAutonomous extends LinearOpMode {
     public class Launcher {
+        CompetitionAutonomous Functions = new CompetitionAutonomous();
+
         private DcMotorEx launcher;
+        private DcMotor feedRight;
+        private DcMotor feedLeft;
+        private DcMotor intake;
 
         public Launcher(HardwareMap hardwareMap) {
             launcher = hardwareMap.get(DcMotorEx.class, "launcher");
             launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            launcher.setDirection(DcMotorSimple.Direction.FORWARD);
+            launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 5, 10, 25));
+            launcher.setDirection(DcMotorSimple.Direction.REVERSE);
+
+            feedRight = hardwareMap.get(DcMotor.class, "right_feeder");
+            feedRight.setDirection(DcMotorSimple.Direction.REVERSE);
+            feedRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+            feedLeft = hardwareMap.get(DcMotor.class, "left_feeder");
+            feedLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+            feedLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+            intake = hardwareMap.get(DcMotor.class, "intake");
+            intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
+        public class SpinUp implements Action {
+            public boolean run(@NonNull TelemetryPacket packet) {
+                launcher.setVelocity(1350);
+                return launcher.getVelocity() == 0;
+            }
+        }
+        public Action SpinUp() {
+            return new SpinUp();
         }
 
-        public class LaunchLeft implements Action {
-            private boolean initialized = false;
+        public class SetTargetVelocity implements Action {
+            public boolean run(@NonNull TelemetryPacket packet) {
+                double power = Functions.getPower();
+                double minPower = power - 50;
+                double maxPower = power + 50;
 
+                launcher.setVelocity(power);
+
+                return !(launcher.getVelocity() <= maxPower) || !(launcher.getVelocity() >= minPower);
+            }
+        }
+
+        public Action SetTargetVelocity() {
+            return new SetTargetVelocity();
+        }
+
+        public class SpinDown implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                launcher.setVelocity(Functions.STOP_SPEED);
+                return false;
+            }
+        }
+
+        public Action SpinDown() {
+            return new SpinDown();
+        }
+
+        public class Intake implements Action {
+            boolean initialized = false;
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    launcher.setPower(0.8);
-                    initialized = true;
+                    intake.setPower(Functions.MAX_SPEED);
+                    Functions.intakeTimer.reset();
                 }
 
-                double pos = launcher.getCurrentPosition();
-                packet.put("liftPos", pos);
-                if (pos < 3000.0) {
-                    return true;
-                } else {
-                    launcher.setPower(0);
+                if (Functions.intakeTimer.seconds() > Functions.INTAKE_TIME_SECONDS) {
+                    intake.setPower(Functions.STOP_SPEED);
                     return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+        public Action Intake() {
+            return new Intake();
+        }
+
+        public class LaunchLeft implements Action {
+            boolean initialized = false;
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    feedLeft.setPower(Functions.MAX_SPEED);
+                    Functions.feederTimer.reset();
+                }
+
+                if (Functions.feederTimer.seconds() > Functions.FEED_TIME_SECONDS) {
+                    feedLeft.setPower(Functions.STOP_SPEED);
+                    return false;
+                } else {
+                    return true;
                 }
             }
         }
@@ -56,22 +134,19 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         }
 
         public class LaunchRight implements Action {
-            private boolean initialized = false;
-
+            boolean initialized = false;
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    launcher.setPower(-0.8);
-                    initialized = true;
+                    feedRight.setPower(Functions.MAX_SPEED);
+                    Functions.feederTimer.reset();
                 }
 
-                double pos = launcher.getCurrentPosition();
-                packet.put("liftPos", pos);
-                if (pos > 100.0) {
-                    return true;
-                } else {
-                    launcher.setPower(0);
+                if (Functions.feederTimer.seconds() > Functions.FEED_TIME_SECONDS) {
+                    feedRight.setPower(Functions.STOP_SPEED);
                     return false;
+                } else {
+                    return true;
                 }
             }
         }
@@ -80,46 +155,16 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         }
     }
 
-    public class Claw {
-        private Servo claw;
-
-        public Claw(HardwareMap hardwareMap) {
-            claw = hardwareMap.get(Servo.class, "claw");
-        }
-
-        public class CloseClaw implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                claw.setPosition(0.55);
-                return false;
-            }
-        }
-        public Action closeClaw() {
-            return new CloseClaw();
-        }
-
-        public class OpenClaw implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                claw.setPosition(1.0);
-                return false;
-            }
-        }
-        public Action openClaw() {
-            return new OpenClaw();
-        }
-    }
-
     @Override
     public void runOpMode() {
         Pose2d initialPose = new Pose2d(11.8, 61.7, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-        Claw claw = new Claw(hardwareMap);
         Launcher launcher = new Launcher(hardwareMap);
 
         // vision here that outputs position
         int visionOutputPosition = 1;
 
+        /*
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
                 .lineToYSplineHeading(33, Math.toRadians(0))
                 .waitSeconds(2)
@@ -147,9 +192,10 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         Action trajectoryActionCloseOut = tab1.endTrajectory().fresh()
                 .strafeTo(new Vector2d(48, 12))
                 .build();
+         */
 
         // actions that need to happen on init; for instance, a claw tightening.
-        Actions.runBlocking(claw.closeClaw());
+        //Actions.runBlocking(claw.closeClaw());
 
 
         while (!isStopRequested() && !opModeIsActive()) {
@@ -178,7 +224,6 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                 new SequentialAction(
                         trajectoryActionChosen,
                         launcher.LaunchLeft(),
-                        claw.openClaw(),
                         launcher.LaunchRight(),
                         trajectoryActionCloseOut
                 )
