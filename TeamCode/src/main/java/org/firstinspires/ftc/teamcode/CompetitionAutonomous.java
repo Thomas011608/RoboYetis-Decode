@@ -40,7 +40,7 @@ public class CompetitionAutonomous extends LinearOpMode {
 
     // HEADER: Define other variables
     private int GoalID = 0;
-    private int obeliskID = 0;
+    public int obeliskID = 0;
 
     @Override
     public void runOpMode() {

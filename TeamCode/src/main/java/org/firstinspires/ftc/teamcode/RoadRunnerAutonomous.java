@@ -26,8 +26,8 @@ import java.util.Set;
 @Config
 @Autonomous(name = "RoadRunnerAutonomous", group = "Competition")
 public class RoadRunnerAutonomous extends LinearOpMode {
+    CompetitionAutonomous Functions = new CompetitionAutonomous();
     public class Launcher {
-        CompetitionAutonomous Functions = new CompetitionAutonomous();
 
         private DcMotorEx launcher;
         private DcMotor feedRight;
@@ -157,7 +157,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d initialPose = new Pose2d(11.8, 61.7, Math.toRadians(90));
+        Pose2d initialPose = new Pose2d(63, 12, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         Launcher launcher = new Launcher(hardwareMap);
 
@@ -194,12 +194,26 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                 .build();
          */
 
+
+        TrajectoryActionBuilder action1 = drive.actionBuilder(initialPose)
+                .lineToX(51);
+
+        TrajectoryActionBuilder action2 = drive.actionBuilder(initialPose)
+                .lineToX(2);
+        TrajectoryActionBuilder action3 = drive.actionBuilder(initialPose)
+                .lineToX(2);
+        TrajectoryActionBuilder action4 = drive.actionBuilder(initialPose)
+                .lineToX(2);
+
         // actions that need to happen on init; for instance, a claw tightening.
         //Actions.runBlocking(claw.closeClaw());
-
+        int ID = 0;
 
         while (!isStopRequested() && !opModeIsActive()) {
             int position = visionOutputPosition;
+            double a = Functions.getDistance();
+            ID = Functions.obeliskID;
+            telemetry.addData("ID", ID);
             telemetry.addData("Position during Init", position);
             telemetry.update();
         }
@@ -212,21 +226,47 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         if (isStopRequested()) return;
 
         Action trajectoryActionChosen;
-        if (startPosition == 1) {
+        /*if (startPosition == 1) {
             trajectoryActionChosen = tab1.build();
         } else if (startPosition == 2) {
             trajectoryActionChosen = tab2.build();
         } else {
             trajectoryActionChosen = tab3.build();
+        }*/
+
+        if (ID == 1){
+            Actions.runBlocking(
+                    new SequentialAction(
+                            //trajectoryActionChosen,
+                            action1.build()
+                            //launcher.LaunchLeft(),
+                            //launcher.LaunchRight()
+                            //trajectoryActionCloseOut
+                    )
+            );
+        }
+        else if (ID == 2){
+            Actions.runBlocking(
+                    new SequentialAction(
+                            //trajectoryActionChosen,
+                            action1.build()
+                            //launcher.LaunchLeft(),
+                            //launcher.LaunchRight()
+                            //trajectoryActionCloseOut
+                    )
+            );
+        }
+        else {
+            Actions.runBlocking(
+                    new SequentialAction(
+                            //trajectoryActionChosen,
+                            action1.build()
+                            //launcher.LaunchLeft(),
+                            //launcher.LaunchRight()
+                            //trajectoryActionCloseOut
+                    )
+            );
         }
 
-        Actions.runBlocking(
-                new SequentialAction(
-                        trajectoryActionChosen,
-                        launcher.LaunchLeft(),
-                        launcher.LaunchRight(),
-                        trajectoryActionCloseOut
-                )
-        );
     }
 }
