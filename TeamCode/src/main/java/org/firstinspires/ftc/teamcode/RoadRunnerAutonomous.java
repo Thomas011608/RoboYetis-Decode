@@ -3,29 +3,151 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.teamcode.road_runner.MecanumDrive;
-import com.acmerobotics.roadrunner.ParallelAction;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
-
-import java.util.Set;
 
 @Config
 @Autonomous(name = "RoadRunnerAutonomous", group = "Competition")
 public class RoadRunnerAutonomous extends LinearOpMode {
+    int ID = 0;
+    double distance = -1;
+    double power = -1;
+    double X = -1;
+    final double GOAL_ANGLE_RAD = Math.PI - 0.48995732625;
+    public class Camera {
+        private HuskyLens huskyLens;
+        public Camera(HardwareMap hardwareMap) {
+            huskyLens = hardwareMap.get(HuskyLens.class, "camera");
+            if (!huskyLens.knock()) {
+                telemetry.addData("HuskyLens", "Error initializing HuskyLens");
+            }
+        }
+
+        public class GetObeliskID implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (ID == 0 && block.id == 1 || block.id == 2 || block.id == 3) {
+                        ID = block.id;
+                    }
+                }
+                return ID == 0;
+            }
+        }
+        public Action GetObeliskID() {
+            return new GetObeliskID();
+        }
+
+        public class GetPowerRed implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (block.id == 4) {
+                        //custom distance function
+                        double area = block.width * block.height;
+                        distance = Math.pow((area / 16139259.8), (1 / -1.89076));
+                    } else {
+                        distance = -1;
+                    }
+                }
+
+                if (distance < 130 && distance != -1) {
+                    power = 1300;
+                } else if (distance > 240) {
+                    power = 1475;
+                } else if (distance != -1){
+                    power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+                } else {
+                    power = -1;
+                }
+                return (power == -1);
+            }
+        }
+        public Action GetPowerRed() {
+            return new GetPowerRed();
+        }
+
+        public class GetPowerBlue implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (block.id == 5) {
+                        //custom distance function
+                        double area = block.width * block.height;
+                        distance = Math.pow((area / 16139259.8), (1 / -1.89076));
+                    } else {
+                        distance = -1;
+                    }
+                }
+
+                if (distance < 130 && distance != -1) {
+                    power = 1300;
+                } else if (distance > 240) {
+                    power = 1475;
+                } else if (distance != -1){
+                    power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+                } else {
+                    power = -1;
+                }
+                return power == -1;
+            }
+        }
+        public Action GetPowerBlue() {
+            return new GetPowerBlue();
+        }
+
+        public class GetTagXRed implements Action {
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (block.id == 4) {
+                        X = block.x;
+                    } else {
+                        X = -1;
+                    }
+                }
+                return X == -1;
+            }
+        }
+        public Action GetTagXRed() {
+            return new GetTagXRed();
+        }
+
+        public class GetTagXBlue implements Action {
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (block.id == 5) {
+                        X = block.x;
+                    } else {
+                        X = -1;
+                    }
+                }
+                return X == -1;
+            }
+        }
+        public Action GetTagXBlue() {
+            return new GetTagXBlue();
+        }
+    }
+
     CompetitionAutonomous Functions = new CompetitionAutonomous();
     public class Launcher {
 
@@ -65,7 +187,6 @@ public class RoadRunnerAutonomous extends LinearOpMode {
 
         public class SetTargetVelocity implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
-                double power = Functions.getPower();
                 double minPower = power - 50;
                 double maxPower = power + 50;
 
@@ -157,9 +278,10 @@ public class RoadRunnerAutonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d initialPose = new Pose2d(63, 12, Math.toRadians(180));
-        MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
+        Pose2d currentPose = new Pose2d(63, 12, Math.toRadians(180));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
         Launcher launcher = new Launcher(hardwareMap);
+        Camera camera = new Camera(hardwareMap);
 
         // vision here that outputs position
         int visionOutputPosition = 1;
@@ -195,26 +317,37 @@ public class RoadRunnerAutonomous extends LinearOpMode {
          */
 
 
-        TrajectoryActionBuilder action1 = drive.actionBuilder(initialPose)
-                .lineToX(51);
+        TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
+                .lineToX(58)
+                .turnTo(GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58,12,GOAL_ANGLE_RAD);
 
-        TrajectoryActionBuilder action2 = drive.actionBuilder(initialPose)
-                .lineToX(2);
-        TrajectoryActionBuilder action3 = drive.actionBuilder(initialPose)
-                .lineToX(2);
-        TrajectoryActionBuilder action4 = drive.actionBuilder(initialPose)
-                .lineToX(2);
+        TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
+                .turnTo(Math.PI)
+                .splineTo(new Vector2d(39,36),Math.PI/2);
+        currentPose = new Pose2d(39,36,Math.PI/2);
 
-        // actions that need to happen on init; for instance, a claw tightening.
-        //Actions.runBlocking(claw.closeClaw());
-        int ID = 0;
+        TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
+                .lineToY(54);
+        currentPose = new Pose2d(39,54,Math.PI/2);
+
+        TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
+                .turnTo(GOAL_ANGLE_RAD)
+                .splineToConstantHeading(new Vector2d(58,12), GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58,12,GOAL_ANGLE_RAD);
+
+        TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
+                .turnTo(Math.PI)
+                .lineToX(24);
+
+
+        //TODO: Add alliance color selection
 
         while (!isStopRequested() && !opModeIsActive()) {
             int position = visionOutputPosition;
-            double a = Functions.getDistance();
-            ID = Functions.obeliskID;
-            telemetry.addData("ID", ID);
             telemetry.addData("Position during Init", position);
+            Actions.runBlocking(camera.GetObeliskID());
+            telemetry.addData("ID", ID);
             telemetry.update();
         }
 
@@ -234,36 +367,123 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             trajectoryActionChosen = tab3.build();
         }*/
 
+        //HEADER: GPP
         if (ID == 1){
             Actions.runBlocking(
-                    new SequentialAction(
-                            //trajectoryActionChosen,
-                            action1.build()
-                            //launcher.LaunchLeft(),
-                            //launcher.LaunchRight()
-                            //trajectoryActionCloseOut
+                    new ParallelAction(
+                            goalAlign.build(),
+                            launcher.SpinUp(),
+                            new SequentialAction(
+                                    camera.GetPowerRed(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
+                                    launcher.SpinDown(),
+
+                                    driveToIntake.build(),
+                                    new ParallelAction (
+                                            launcher.Intake(),
+                                            driveWhileIntake.build()
+                                    ),
+                                    new ParallelAction(
+                                            moveToLaunch.build(),
+                                            launcher.SpinUp()
+                                    ),
+
+                                    camera.GetPowerRed(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
+                                    launcher.SpinDown(),
+
+                                    driveForward.build()
+                            )
                     )
             );
         }
+
+        //HEADER: PGP
         else if (ID == 2){
             Actions.runBlocking(
-                    new SequentialAction(
-                            //trajectoryActionChosen,
-                            action1.build()
-                            //launcher.LaunchLeft(),
-                            //launcher.LaunchRight()
-                            //trajectoryActionCloseOut
+                    new ParallelAction(
+                            goalAlign.build(),
+                            launcher.SpinUp(),
+                            new SequentialAction(
+                                    camera.GetPowerRed(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
+                                    launcher.SpinDown(),
+
+                                    driveToIntake.build(),
+                                    new ParallelAction (
+                                            launcher.Intake(),
+                                            driveWhileIntake.build()
+                                    ),
+                                    new ParallelAction(
+                                            moveToLaunch.build(),
+                                            launcher.SpinUp()
+                                    ),
+
+                                    camera.GetPowerRed(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
+                                    launcher.SpinDown(),
+
+                                    driveForward.build()
+                            )
                     )
             );
         }
+
+        //HEADER: PPG
         else {
             Actions.runBlocking(
-                    new SequentialAction(
-                            //trajectoryActionChosen,
-                            action1.build()
-                            //launcher.LaunchLeft(),
-                            //launcher.LaunchRight()
-                            //trajectoryActionCloseOut
+                    new ParallelAction(
+                            goalAlign.build(),
+                            launcher.SpinUp(),
+                            new SequentialAction(
+                                    camera.GetPowerRed(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.Intake(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.SpinDown(),
+
+                                    driveToIntake.build(),
+                                    new ParallelAction (
+                                            launcher.Intake(),
+                                            driveWhileIntake.build()
+                                    ),
+                                    new ParallelAction(
+                                            moveToLaunch.build(),
+                                            launcher.SpinUp()
+                                    ),
+
+                                    camera.GetPowerRed(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.Intake(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.SpinDown(),
+
+                                    driveForward.build()
+                            )
                     )
             );
         }
