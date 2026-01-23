@@ -28,8 +28,8 @@ public class RoadRunnerAutonomous extends LinearOpMode {
     double distance = -1;
     double power = -1;
     double X = -1;
+    double GOAL_ANGLE_RAD = Math.PI - 0.48;
 
-    final double GOAL_ANGLE_RAD = Math.PI - 0.48995732625;
     final double STOP_SPEED = 0.0;
     final double MAX_SPEED = 1.0;
     final double FEED_TIME_SECONDS = 1.5;
@@ -336,21 +336,21 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
                 .lineToX(58)
                 .turnTo(GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58,12,GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(35,36),Math.PI/2);
-        currentPose = new Pose2d(35,36,Math.PI/2);
+                .splineTo(new Vector2d(35, 36),Math.PI/2);
+        currentPose = new Pose2d(35, 36, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
                 .lineToY(54);
-        currentPose = new Pose2d(39,54,Math.PI/2);
+        currentPose = new Pose2d(39, 54, Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
                 .turnTo(GOAL_ANGLE_RAD)
-                .splineToConstantHeading(new Vector2d(58,12), GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58,12,GOAL_ANGLE_RAD);
+                .splineToConstantHeading(new Vector2d(58, 12), GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
@@ -360,10 +360,9 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         //TODO: Add alliance color selection
 
         while (!isStopRequested() && !opModeIsActive()) {
-            int position = visionOutputPosition;
-            telemetry.addData("Position during Init", position);
             Actions.runBlocking(camera.GetObeliskID());
             telemetry.addData("ID", ID);
+
             telemetry.update();
         }
 
