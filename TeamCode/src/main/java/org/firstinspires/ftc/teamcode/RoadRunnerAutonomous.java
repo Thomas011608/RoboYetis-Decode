@@ -19,6 +19,7 @@ import org.firstinspires.ftc.teamcode.road_runner.MecanumDrive;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Config
 @Autonomous(name = "RoadRunnerAutonomous", group = "Competition")
@@ -27,7 +28,16 @@ public class RoadRunnerAutonomous extends LinearOpMode {
     double distance = -1;
     double power = -1;
     double X = -1;
+
     final double GOAL_ANGLE_RAD = Math.PI - 0.48995732625;
+    final double STOP_SPEED = 0.0;
+    final double MAX_SPEED = 1.0;
+    final double FEED_TIME_SECONDS = 1.5;
+    final double INTAKE_TIME_SECONDS = 1.0;
+    ElapsedTime rightFeederTimer = new ElapsedTime();
+    ElapsedTime leftFeederTimer = new ElapsedTime();
+    ElapsedTime intakeTimer = new ElapsedTime();
+
     public class Camera {
         private HuskyLens huskyLens;
         public Camera(HardwareMap hardwareMap) {
@@ -148,7 +158,6 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         }
     }
 
-    CompetitionAutonomous Functions = new CompetitionAutonomous();
     public class Launcher {
 
         private DcMotorEx launcher;
@@ -203,7 +212,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         public class SpinDown implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                launcher.setVelocity(Functions.STOP_SPEED);
+                launcher.setVelocity(STOP_SPEED);
                 return false;
             }
         }
@@ -217,12 +226,13 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    intake.setPower(Functions.MAX_SPEED);
-                    Functions.intakeTimer.reset();
+                    intake.setPower(MAX_SPEED);
+                    intakeTimer.reset();
+                    initialized = true;
                 }
 
-                if (Functions.intakeTimer.seconds() > Functions.INTAKE_TIME_SECONDS) {
-                    intake.setPower(Functions.STOP_SPEED);
+                if (intakeTimer.seconds() > INTAKE_TIME_SECONDS) {
+                    intake.setPower(STOP_SPEED);
                     return false;
                 } else {
                     return true;
@@ -238,19 +248,20 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    feedLeft.setPower(Functions.MAX_SPEED);
-                    Functions.feederTimer.reset();
+                    feedLeft.setPower(MAX_SPEED);
+                    leftFeederTimer.reset();
+                    initialized = true;
                 }
 
-                if (Functions.feederTimer.seconds() > Functions.FEED_TIME_SECONDS) {
-                    feedLeft.setPower(Functions.STOP_SPEED);
+                if (leftFeederTimer.seconds() > FEED_TIME_SECONDS) {
+                    feedLeft.setPower(STOP_SPEED);
                     return false;
                 } else {
                     return true;
                 }
             }
         }
-        public Action LaunchLeft() {
+        public Action LaunchLeft(){
             return new LaunchLeft();
         }
 
@@ -259,12 +270,13 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    feedRight.setPower(Functions.MAX_SPEED);
-                    Functions.feederTimer.reset();
+                    feedRight.setPower(MAX_SPEED);
+                    rightFeederTimer.reset();
+                    initialized = true;
                 }
 
-                if (Functions.feederTimer.seconds() > Functions.FEED_TIME_SECONDS) {
-                    feedRight.setPower(Functions.STOP_SPEED);
+                if (rightFeederTimer.seconds() > FEED_TIME_SECONDS) {
+                    feedRight.setPower(STOP_SPEED);
                     return false;
                 } else {
                     return true;
@@ -285,6 +297,10 @@ public class RoadRunnerAutonomous extends LinearOpMode {
 
         // vision here that outputs position
         int visionOutputPosition = 1;
+
+        leftFeederTimer.reset();
+        rightFeederTimer.reset();
+        intakeTimer.reset();
 
         /*
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
@@ -324,8 +340,8 @@ public class RoadRunnerAutonomous extends LinearOpMode {
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(39,36),Math.PI/2);
-        currentPose = new Pose2d(39,36,Math.PI/2);
+                .splineTo(new Vector2d(35,36),Math.PI/2);
+        currentPose = new Pose2d(35,36,Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
                 .lineToY(54);
