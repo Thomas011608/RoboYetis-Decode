@@ -1,12 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -74,6 +72,8 @@ public class CompetitionTeleOp extends LinearOpMode {
     private LaunchState launchState = LaunchState.IDLE;
     private IntakeState intakeState = IntakeState.IDLE;
     private double Xprev = -1;
+    public Servo lightOne = null;
+    public Servo lightTwo = null;
 
     @Override
     public void runOpMode() {
@@ -99,6 +99,9 @@ public class CompetitionTeleOp extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotor.class, "back_left_drive");
         frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
         backRightDrive = hardwareMap.get(DcMotor.class, "back_right_drive");
+        lightOne = hardwareMap.get(Servo.class,"Light One");
+        lightTwo = hardwareMap.get(Servo.class,"Light Two");
+
         //Set Driving Direction
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -165,6 +168,20 @@ public class CompetitionTeleOp extends LinearOpMode {
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
 
+            /*HuskyLens.Block[] blocks = huskyLens.blocks();
+            for (HuskyLens.Block block : blocks) {
+                double blockx = block.x;
+                double LedOne = blockx / 320;
+                double LedTwo = -((160-blockx)/320);
+                telemetry.addData("Led1",blockx / 320 );
+                telemetry.addData("Led2", -((160-blockx)/320));
+                lightOne.setPosition( LedOne );
+                lightTwo.setPosition( LedTwo );
+                telemetry.addData("Led1",LedOne );
+                telemetry.addData("Led2", LedTwo);
+                telemetry.addData("Input",block.x);
+                telemetry.addData("Input",blockx);
+            }*/
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
             double frontLeftPower = axial + lateral + yaw;
@@ -513,7 +530,13 @@ public class CompetitionTeleOp extends LinearOpMode {
             if (block.id == GoalID) {
                 double area = block.width * block.height;
                 distance = Math.pow((area / 16139259.8), (1 / -1.89076));
-
+                double blockx = block.x;
+                double LedOne = blockx / 320;
+                double LedTwo = -((160-blockx)/320);
+                telemetry.addData("Led1",blockx / 320 );
+                telemetry.addData("Led2", -((160-blockx)/320));
+                lightOne.setPosition( LedOne );
+                lightTwo.setPosition( LedTwo );
                 if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble == false || block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS) {
                     gamepad1.rumble(100);
                     gamepad2.rumble(100);
