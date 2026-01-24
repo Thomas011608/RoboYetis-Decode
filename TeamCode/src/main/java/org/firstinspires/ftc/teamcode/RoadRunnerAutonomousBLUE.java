@@ -3,13 +3,10 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.AngularVelConstraint;
-import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
@@ -25,17 +22,15 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import java.util.Arrays;
-
 @Config
-@Autonomous(name = "RoadRunnerAutonomous", group = "Competition")
-public class RoadRunnerAutonomous extends LinearOpMode {
+@Autonomous(name = "RoadRunnerAutonomousBLUE", group = "Competition")
+public class RoadRunnerAutonomousBLUE extends LinearOpMode {
     //HEADER: Define Variables
     int ID = 0;
     double distance = -1;
     double power = -1;
     double X = -1;
-    double GOAL_ANGLE_RAD = Math.PI - 0.46;
+    double GOAL_ANGLE_RAD = Math.PI + 0.44;
 
     //Define final variables
     final double STOP_SPEED = 0.0;
@@ -182,7 +177,6 @@ public class RoadRunnerAutonomous extends LinearOpMode {
     }
 
     public class Launcher {
-
         private DcMotorEx launcher;
         private DcMotor feedRight;
         private DcMotor feedLeft;
@@ -360,75 +354,41 @@ public class RoadRunnerAutonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d currentPose = new Pose2d(63, 12, Math.toRadians(180));
+        Pose2d currentPose = new Pose2d(63, -12, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
         Launcher launcher = new Launcher(hardwareMap);
         Camera camera = new Camera(hardwareMap);
 
-        // vision here that outputs position
-        int visionOutputPosition = 1;
 
         leftFeederTimer.reset();
         rightFeederTimer.reset();
+        backTimer.reset();
         intakeTimer.reset();
 
-        /*
-        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .lineToYSplineHeading(33, Math.toRadians(0))
-                .waitSeconds(2)
-                .setTangent(Math.toRadians(90))
-                .lineToY(48)
-                .setTangent(Math.toRadians(0))
-                .lineToX(32)
-                .strafeTo(new Vector2d(44.5, 30))
-                .turn(Math.toRadians(180))
-                .lineToX(47.5)
-                .waitSeconds(3);
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
-                .lineToY(37)
-                .setTangent(Math.toRadians(0))
-                .lineToX(18)
-                .waitSeconds(3)
-                .setTangent(Math.toRadians(0))
-                .lineToXSplineHeading(46, Math.toRadians(180))
-                .waitSeconds(3);
-        TrajectoryActionBuilder tab3 = drive.actionBuilder(initialPose)
-                .lineToYSplineHeading(33, Math.toRadians(180))
-                .waitSeconds(2)
-                .strafeTo(new Vector2d(46, 30))
-                .waitSeconds(3);
-        Action trajectoryActionCloseOut = tab1.endTrajectory().fresh()
-                .strafeTo(new Vector2d(48, 12))
-                .build();
-         */
-
-
+        //Create Trajectories to build later
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
                 .lineToX(58)
                 .turnTo(GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58, -12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(31, 36),Math.PI/2);
-        currentPose = new Pose2d(31, 36, Math.PI/2);
+                .splineTo(new Vector2d(31, -36),3*Math.PI/2);
+        currentPose = new Pose2d(31, -36, 3*Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(54, new TranslationalVelConstraint(5));
-        currentPose = new Pose2d(39, 56, Math.PI/2);
+                .lineToY(-54, new TranslationalVelConstraint(5));
+        currentPose = new Pose2d(39, -54, 3*Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
-                .turnTo(GOAL_ANGLE_RAD)
-                .setTangent(GOAL_ANGLE_RAD)
-                .splineToConstantHeading(new Vector2d(58, 12), GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+                .splineToConstantHeading(new Vector2d(58, -12), 3*Math.PI/2)
+                .turnTo(GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58, -12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
                 .lineToX(24);
 
-
-        //TODO: Add alliance color selection
 
         while (!isStopRequested() && !opModeIsActive()) {
             Actions.runBlocking(camera.GetObeliskID());
@@ -437,9 +397,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         }
 
         waitForStart();
-
         if (isStopRequested()) return;
-
 
 
         //HEADER: GPP
@@ -464,7 +422,6 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                                     //Purple 2
                                     launcher.Intake(),
                                     launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
                                     launcher.SpinDown(),
 
                                     //Move toward the intake & Collect balls
@@ -482,7 +439,6 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                                     ),
 
                                     //Set the velocity and launch
-                                    //TODO: Not in order for second launch! (for all 3)
                                     camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchLeft(),
@@ -521,7 +477,6 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                                     //Purple 2
                                     launcher.Intake(),
                                     launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
                                     launcher.SpinDown(),
 
                                     //Move toward the intake & Collect balls
@@ -568,14 +523,14 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                                     launcher.SetTargetVelocity(),
 
                                     //Purple 1
-                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
 
                                     //Purple 2
                                     launcher.Intake(),
-                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
 
                                     //Green
-                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
                                     launcher.SpinDown(),
 
                                     //Move toward the intake & Collect balls
@@ -594,10 +549,10 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                                     //Set the velocity and launch
                                     camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.Intake(),
-                                    launcher.LaunchLeft(),
                                     launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
                                     launcher.SpinDown(),
 
                                     //Move out of launch zone

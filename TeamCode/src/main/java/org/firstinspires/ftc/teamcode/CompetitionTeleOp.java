@@ -12,12 +12,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 
 
-@TeleOp(name = "CompetitionTeleOp", group = "Linear OpMode")
+@TeleOp(name = "CompetitionTeleOp", group = "ACompetition")
 public class  CompetitionTeleOp extends LinearOpMode {
     double distance = 0;
 
     // HEADER: Declare OpMode members for each of the motors.
-    private ElapsedTime runtime = new ElapsedTime();
     private DcMotor frontLeftDrive = null;
     private DcMotor backLeftDrive = null;
     private DcMotor frontRightDrive = null;
@@ -33,6 +32,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
     // HEADER: Defining timers
     ElapsedTime feederTimer = new ElapsedTime();
     ElapsedTime launchTimer = new ElapsedTime();
+    ElapsedTime runtime = new ElapsedTime();
 
     // HEADER: Defining final variables
     final double LAUNCH_TIME_SECONDS = 5.0; //The maximum time that the launcher is on for
@@ -167,7 +167,8 @@ public class  CompetitionTeleOp extends LinearOpMode {
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
 
-            /*HuskyLens.Block[] blocks = huskyLens.blocks();
+            /*
+            HuskyLens.Block[] blocks = huskyLens.blocks();
             for (HuskyLens.Block block : blocks) {
                 double blockx = block.x;
                 double LedOne = blockx / 320;
@@ -180,7 +181,9 @@ public class  CompetitionTeleOp extends LinearOpMode {
                 telemetry.addData("Led2", LedTwo);
                 telemetry.addData("Input",block.x);
                 telemetry.addData("Input",blockx);
-            }*/
+            }
+            */
+
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
             double frontLeftPower = axial + lateral + yaw;
@@ -536,7 +539,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
                 telemetry.addData("Led2", -((160-blockx)/320));
                 lightOne.setPosition( LedOne );
                 lightTwo.setPosition( LedTwo );*/
-                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble == false || block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && LaunchRumble == true) {
+                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble || block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && LaunchRumble) {
                     gamepad1.rumble(100);
                     gamepad2.rumble(100);
                     lightOne.setPosition(0.4409);
@@ -547,7 +550,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
                     lightOne.setPosition(0.315);
                 }
             }
-            if (block.id != 4 || block.id != 5){
+            if (block.id != 4 && block.id != 5) {
                 lightOne.setPosition(0.315);
             }
         }

@@ -17,10 +17,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Disabled
-@TeleOp(name="Test TeleOp", group="Linear OpMode")
+@TeleOp(name="Test TeleOp", group = "Test")
 public class TestTeleOp extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
-    private ElapsedTime runtime = new ElapsedTime();
     private DcMotor frontLeftDrive = null;
     private DcMotor backLeftDrive = null;
     private DcMotor frontRightDrive = null;
@@ -29,10 +28,10 @@ public class TestTeleOp extends LinearOpMode {
     private DcMotor intake = null;
     NormalizedColorSensor colorSensor;
 
-
     ElapsedTime feederTimer = new ElapsedTime();
     ElapsedTime intakeTimer = new ElapsedTime();
-    ElapsedTime sortTimer = new ElapsedTime();
+    ElapsedTime runtime = new ElapsedTime();
+
     final double INTAKE_TIME_SECONDS = 1.0;
     final double SORT_TIME_SECONDS = 0.5;
     final double FEED_TIME_SECONDS = 1.0; //The feeder servos run this long when a shot is requested.

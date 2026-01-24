@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -11,10 +10,9 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Disabled
-@Autonomous (name = "CompetitionAutonomous", group = "Competition")
-public class CompetitionAutonomous extends LinearOpMode {
+@Autonomous (name = "OldCompetitionAutonomous", group = "Old")
+public class OldCompetitionAutonomous extends LinearOpMode {
     // HEADER: Declare OpMode members for each of the motors.
-    private ElapsedTime runtime = new ElapsedTime();
     private DcMotor frontLeftDrive = null;
     private DcMotor backLeftDrive = null;
     private DcMotor frontRightDrive = null;
@@ -27,7 +25,7 @@ public class CompetitionAutonomous extends LinearOpMode {
 
     // HEADER: Defining timers
     ElapsedTime feederTimer = new ElapsedTime();
-    ElapsedTime intakeTimer = new ElapsedTime();
+    ElapsedTime runtime = new ElapsedTime();
 
     // HEADER: Defining final variables
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
@@ -115,7 +113,7 @@ public class CompetitionAutonomous extends LinearOpMode {
         launcher.setVelocity(1525);
 
         while (launcher.getVelocity()<1475){
-
+            telemetry.addData("Action","Spinup");
         }
 
         purpleLaunch();

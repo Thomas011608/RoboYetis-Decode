@@ -6,10 +6,8 @@ import android.graphics.Color;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -18,7 +16,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 
 @Disabled
-@TeleOp(name="IndividualTeleOp", group="Linear OpMode")
+@TeleOp(name="IndividualTeleOp", group = "Test")
 public class IndividualTeleOp extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
     private DcMotor frontLeftDrive = null;
@@ -282,10 +280,10 @@ public class IndividualTeleOp extends LinearOpMode {
 
             HuskyLens.Block[] blocks = huskyLens.blocks();
             telemetry.addData("Block count", blocks.length);
-            for (int i = 0; i < blocks.length; i++) {
-                telemetry.addData("Block", blocks[i].toString());
+            for (HuskyLens.Block block : blocks) {
+                telemetry.addData("Block", block.toString());
 
-                if (blocks[i].x > 140 && blocks[i].x < 180){
+                if (block.x > 140 && block.x < 180) {
                     gamepad1.rumble(100);
                     gamepad2.rumble(100);
                 }
@@ -312,9 +310,9 @@ public class IndividualTeleOp extends LinearOpMode {
     public static double GetDistance(){
         double distance = 0;
         HuskyLens.Block[] blocks = huskyLens.blocks();
-        for (int i = 0; i < blocks.length; i++) {
-            double area = blocks[i].width*blocks[i].height;
-            distance = Math.pow((area/16139259.8),(1/-1.89076));
+        for (HuskyLens.Block block : blocks) {
+            double area = block.width * block.height;
+            distance = Math.pow((area / 16139259.8), (1 / -1.89076));
         }
         return distance;
     }

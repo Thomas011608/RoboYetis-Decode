@@ -6,25 +6,17 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import android.graphics.Color;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Disabled
-@TeleOp(name = "DistanceLauncherSpeed")
+@TeleOp(name = "DistanceLauncherSpeed", group = "Test")
 public class DistanceLauncherSpeed extends LinearOpMode {
 
-    private final int READ_PERIOD = 1;
     private static HuskyLens huskyLens = null;
     private DcMotorEx launcher = null;
     private CRServo leftFeeder = null;
@@ -34,8 +26,6 @@ public class DistanceLauncherSpeed extends LinearOpMode {
     double LAUNCH_TIME_SECONDS = 1;
     double MAX_SPEED = 1;
     double STOP_SPEED = 0;
-    public double[] MotorSpeed;
-    public double[] Distance;
     ElapsedTime launchTimer = new ElapsedTime();
 
 
@@ -43,6 +33,8 @@ public class DistanceLauncherSpeed extends LinearOpMode {
     public void runOpMode()
     {
         // HEADER: Configure HuskyLens
+        int READ_PERIOD = 1;
+
         huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
         Deadline rateLimit = new Deadline(READ_PERIOD, TimeUnit.SECONDS);
         rateLimit.expire();
@@ -84,11 +76,11 @@ public class DistanceLauncherSpeed extends LinearOpMode {
 
             HuskyLens.Block[] blocks = huskyLens.blocks();
             telemetry.addData("Block count", blocks.length);
-            for (int i = 0; i < blocks.length; i++) {
-                telemetry.addData("Block", blocks[i].toString());
+            for (HuskyLens.Block block : blocks) {
+                telemetry.addData("Block", block.toString());
 
-                double area = blocks[i].width*blocks[i].height;
-                double distance = Math.pow((area/16139259.8),(1/-1.89076));
+                double area = block.width * block.height;
+                double distance = Math.pow((area / 16139259.8), (1 / -1.89076));
                 telemetry.addData("Distance", distance);
                 telemetry.addData("Area", area);
             }
@@ -148,9 +140,9 @@ public class DistanceLauncherSpeed extends LinearOpMode {
     public static double GetDistance(){
         double distance = 0;
         HuskyLens.Block[] blocks = huskyLens.blocks();
-        for (int i = 0; i < blocks.length; i++) {
-            double area = blocks[i].width*blocks[i].height;
-            distance = Math.pow((area/16139259.8),(1/-1.89076));
+        for (HuskyLens.Block block : blocks) {
+            double area = block.width * block.height;
+            distance = Math.pow((area / 16139259.8), (1 / -1.89076));
         }
         return distance;
     }

@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Disabled
-@TeleOp(name = "Sensor: HuskyLens", group = "Sensor")
+@TeleOp(name = "Sensor: HuskyLens", group = "Test")
 public class SensorHusky extends LinearOpMode {
 
     private final int READ_PERIOD = 1;
@@ -143,13 +143,13 @@ public class SensorHusky extends LinearOpMode {
             HuskyLens.Block[] blocks = huskyLens.blocks();
             telemetry.addData("Block count", blocks.length);
             int order = 0;
-            for (int i = 0; i < blocks.length; i++) {
-                telemetry.addData("Block", blocks[i].toString());
+            for (HuskyLens.Block block : blocks) {
+                telemetry.addData("Block", block.toString());
 
-                order = blocks[i].id;
+                order = block.id;
 
-                double area = blocks[i].width*blocks[i].height;
-                double distance = Math.pow((area/16139259.8),(1/-1.89076));
+                double area = block.width * block.height;
+                double distance = Math.pow((area / 16139259.8), (1 / -1.89076));
                 telemetry.addData("Distance", distance);
 
                 telemetry.addData("Area", area);
@@ -162,13 +162,13 @@ public class SensorHusky extends LinearOpMode {
                  *
                  * These values have Java type int (integer).
                  */
-                if (order == 1){
+                if (order == 1) {
                     telemetry.addData("Order", "Green Purple Purple");
                 }
-                if (order == 2){
+                if (order == 2) {
                     telemetry.addData("Order", "Purple Green Purple");
                 }
-                if (order == 3){
+                if (order == 3) {
                     telemetry.addData("Order", "Purple Purple Green");
                 }
             }

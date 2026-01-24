@@ -69,7 +69,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 
 @Disabled
-@TeleOp(name = "Sensor: Color", group = "Sensor")
+@TeleOp(name = "Sensor: Color", group = "Test")
 
 public class SensorColor extends LinearOpMode {
 
@@ -150,9 +150,9 @@ public class SensorColor extends LinearOpMode {
       // Update the gain value if either of the A or B gamepad buttons is being held
       if (gamepad1.a) {
         // Only increase the gain by a small amount, since this loop will occur multiple times per second.
-        gain += 0.05;
+        gain += 0.05F;
       } else if (gamepad1.b && gain > 1) { // A gain of less than 1 will make the values smaller, which is not helpful.
-        gain -= 0.05;
+        gain -= 0.05F;
       }
 
       // Show the gain value via telemetry
