@@ -3,10 +3,14 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.AngularVelConstraint;
+import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TrajectoryBuilder;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
@@ -21,24 +25,34 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.util.Arrays;
+
 @Config
 @Autonomous(name = "RoadRunnerAutonomous", group = "Competition")
 public class RoadRunnerAutonomous extends LinearOpMode {
+    //HEADER: Define Variables
     int ID = 0;
     double distance = -1;
     double power = -1;
     double X = -1;
-    double GOAL_ANGLE_RAD = Math.PI - 0.48;
+    double GOAL_ANGLE_RAD = Math.PI - 0.46;
 
+    //Define final variables
     final double STOP_SPEED = 0.0;
     final double MAX_SPEED = 1.0;
     final double FEED_TIME_SECONDS = 1.5;
-    final double INTAKE_TIME_SECONDS = 1.0;
+    final double INTAKE_TIME_SECONDS = 0.3;
+    final double INTAKE_IN_TIME_SECONDS = 5.0;
+
+    //Define timers
     ElapsedTime rightFeederTimer = new ElapsedTime();
     ElapsedTime leftFeederTimer = new ElapsedTime();
     ElapsedTime intakeTimer = new ElapsedTime();
+    ElapsedTime backTimer = new ElapsedTime();
 
+    //HEADER: Camera class
     public class Camera {
+        //Initialize Camera
         private HuskyLens huskyLens;
         public Camera(HardwareMap hardwareMap) {
             huskyLens = hardwareMap.get(HuskyLens.class, "camera");
@@ -47,12 +61,13 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             }
         }
 
+        //Set the Obelisk ID if it has not been set
         public class GetObeliskID implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 HuskyLens.Block[] blocks = huskyLens.blocks();
                 for (HuskyLens.Block block : blocks) {
-                    if (ID == 0 && block.id == 1 || block.id == 2 || block.id == 3) {
+                    if (block.id == 1 || block.id == 2 || block.id == 3) {
                         ID = block.id;
                     }
                 }
@@ -63,13 +78,14 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             return new GetObeliskID();
         }
 
+        //Set the distance and power variables when the AprilTag detected has ID 4
         public class GetPowerRed implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 HuskyLens.Block[] blocks = huskyLens.blocks();
                 for (HuskyLens.Block block : blocks) {
                     if (block.id == 4) {
-                        //custom distance function
+                        //Custom distance function
                         double area = block.width * block.height;
                         distance = Math.pow((area / 16139259.8), (1 / -1.89076));
                     } else {
@@ -77,6 +93,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                     }
                 }
 
+                //Custom power function
                 if (distance < 130 && distance != -1) {
                     power = 1300;
                 } else if (distance > 240) {
@@ -93,13 +110,14 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             return new GetPowerRed();
         }
 
+        //Set the distance and power variables when the AprilTag detected has ID 5
         public class GetPowerBlue implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 HuskyLens.Block[] blocks = huskyLens.blocks();
                 for (HuskyLens.Block block : blocks) {
                     if (block.id == 5) {
-                        //custom distance function
+                        //Custom distance function
                         double area = block.width * block.height;
                         distance = Math.pow((area / 16139259.8), (1 / -1.89076));
                     } else {
@@ -107,6 +125,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                     }
                 }
 
+                //Custom power function
                 if (distance < 130 && distance != -1) {
                     power = 1300;
                 } else if (distance > 240) {
@@ -123,6 +142,8 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             return new GetPowerBlue();
         }
 
+        /*
+        //Set the X position variable when the AprilTag detected has ID 4
         public class GetTagXRed implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
                 HuskyLens.Block[] blocks = huskyLens.blocks();
@@ -140,6 +161,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
             return new GetTagXRed();
         }
 
+        //Set the X position variable when the AprilTag detected has ID 5
         public class GetTagXBlue implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
                 HuskyLens.Block[] blocks = huskyLens.blocks();
@@ -156,6 +178,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         public Action GetTagXBlue() {
             return new GetTagXBlue();
         }
+        */
     }
 
     public class Launcher {
@@ -196,6 +219,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
 
         public class SetTargetVelocity implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
+                power = 1450;
                 double minPower = power - 50;
                 double maxPower = power + 50;
 
@@ -241,6 +265,52 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         }
         public Action Intake() {
             return new Intake();
+        }
+
+        public class PickUp implements Action {
+            boolean initialized = false;
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    intake.setPower(MAX_SPEED);
+                    intakeTimer.reset();
+                    initialized = true;
+                }
+
+                if (intakeTimer.seconds() > INTAKE_IN_TIME_SECONDS) {
+                    intake.setPower(STOP_SPEED);
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+        public Action PickUp() {
+            return new PickUp();
+        }
+
+        public class FeedBack implements Action {
+            boolean initialized = false;
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    feedLeft.setPower(-MAX_SPEED);
+                    feedRight.setPower(-MAX_SPEED);
+                    backTimer.reset();
+                }
+
+                if (backTimer.seconds() > 0.25) {
+                    feedLeft.setPower(STOP_SPEED);
+                    feedRight.setPower(STOP_SPEED);
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+
+        public Action FeedBack() {
+            return new FeedBack();
         }
 
         public class LaunchLeft implements Action {
@@ -340,15 +410,16 @@ public class RoadRunnerAutonomous extends LinearOpMode {
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(35, 36),Math.PI/2);
-        currentPose = new Pose2d(35, 36, Math.PI/2);
+                .splineTo(new Vector2d(31, 36),Math.PI/2);
+        currentPose = new Pose2d(31, 36, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(54);
-        currentPose = new Pose2d(39, 54, Math.PI/2);
+                .lineToY(54, new TranslationalVelConstraint(5));
+        currentPose = new Pose2d(39, 56, Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
                 .turnTo(GOAL_ANGLE_RAD)
+                .setTangent(GOAL_ANGLE_RAD)
                 .splineToConstantHeading(new Vector2d(58, 12), GOAL_ANGLE_RAD);
         currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
 
@@ -362,52 +433,56 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         while (!isStopRequested() && !opModeIsActive()) {
             Actions.runBlocking(camera.GetObeliskID());
             telemetry.addData("ID", ID);
-
             telemetry.update();
         }
 
-        int startPosition = visionOutputPosition;
-        telemetry.addData("Starting Position", startPosition);
-        telemetry.update();
         waitForStart();
 
         if (isStopRequested()) return;
 
-        Action trajectoryActionChosen;
-        /*if (startPosition == 1) {
-            trajectoryActionChosen = tab1.build();
-        } else if (startPosition == 2) {
-            trajectoryActionChosen = tab2.build();
-        } else {
-            trajectoryActionChosen = tab3.build();
-        }*/
+
 
         //HEADER: GPP
         if (ID == 1){
             Actions.runBlocking(
                     new ParallelAction(
+                            //Turn and spin up
                             goalAlign.build(),
                             launcher.SpinUp(),
+
                             new SequentialAction(
+                                    //Set spin velocity, launch in the correct order
                                     camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
+
+                                    //Green
                                     launcher.LaunchLeft(),
+
+                                    //Purple 1
                                     launcher.LaunchRight(),
+
+                                    //Purple 2
                                     launcher.Intake(),
                                     launcher.LaunchRight(),
                                     launcher.LaunchLeft(),
                                     launcher.SpinDown(),
 
+                                    //Move toward the intake & Collect balls
                                     driveToIntake.build(),
                                     new ParallelAction (
-                                            launcher.Intake(),
+                                            launcher.PickUp(),
                                             driveWhileIntake.build()
                                     ),
+
+                                    //Move back and spin up
                                     new ParallelAction(
                                             moveToLaunch.build(),
-                                            launcher.SpinUp()
+                                            launcher.SpinUp(),
+                                            launcher.FeedBack()
                                     ),
 
+                                    //Set the velocity and launch
+                                    //TODO: Not in order for second launch! (for all 3)
                                     camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchLeft(),
@@ -417,6 +492,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                                     launcher.LaunchLeft(),
                                     launcher.SpinDown(),
 
+                                    //Move out of launch zone
                                     driveForward.build()
                             )
                     )
@@ -427,28 +503,41 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         else if (ID == 2){
             Actions.runBlocking(
                     new ParallelAction(
+                            //Turn and spin up
                             goalAlign.build(),
                             launcher.SpinUp(),
+
                             new SequentialAction(
+                                    //Set spin velocity, launch in the correct order
                                     camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
+
+                                    //Purple 1
                                     launcher.LaunchRight(),
+
+                                    //Green
                                     launcher.LaunchLeft(),
+
+                                    //Purple 2
                                     launcher.Intake(),
                                     launcher.LaunchRight(),
                                     launcher.LaunchLeft(),
                                     launcher.SpinDown(),
 
+                                    //Move toward the intake & Collect balls
                                     driveToIntake.build(),
                                     new ParallelAction (
-                                            launcher.Intake(),
+                                            launcher.PickUp(),
                                             driveWhileIntake.build()
                                     ),
+
+                                    //Move back and spin up
                                     new ParallelAction(
                                             moveToLaunch.build(),
                                             launcher.SpinUp()
                                     ),
 
+                                    //Set the velocity and launch
                                     camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchRight(),
@@ -458,6 +547,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                                     launcher.LaunchLeft(),
                                     launcher.SpinDown(),
 
+                                    //Move out of launch zone
                                     driveForward.build()
                             )
                     )
@@ -468,27 +558,40 @@ public class RoadRunnerAutonomous extends LinearOpMode {
         else {
             Actions.runBlocking(
                     new ParallelAction(
+                            //Turn and spin up
                             goalAlign.build(),
                             launcher.SpinUp(),
+
                             new SequentialAction(
+                                    //Set spin velocity, launch in the correct order
                                     camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
+
+                                    //Purple 1
                                     launcher.LaunchLeft(),
+
+                                    //Purple 2
                                     launcher.Intake(),
                                     launcher.LaunchLeft(),
+
+                                    //Green
                                     launcher.LaunchRight(),
                                     launcher.SpinDown(),
 
+                                    //Move toward the intake & Collect balls
                                     driveToIntake.build(),
                                     new ParallelAction (
-                                            launcher.Intake(),
+                                            launcher.PickUp(),
                                             driveWhileIntake.build()
                                     ),
+
+                                    //Move back and spin up
                                     new ParallelAction(
                                             moveToLaunch.build(),
                                             launcher.SpinUp()
                                     ),
 
+                                    //Set the velocity and launch
                                     camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchLeft(),
@@ -497,6 +600,7 @@ public class RoadRunnerAutonomous extends LinearOpMode {
                                     launcher.LaunchRight(),
                                     launcher.SpinDown(),
 
+                                    //Move out of launch zone
                                     driveForward.build()
                             )
                     )
