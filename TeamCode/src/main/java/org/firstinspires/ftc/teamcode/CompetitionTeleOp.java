@@ -536,12 +536,19 @@ public class  CompetitionTeleOp extends LinearOpMode {
                 telemetry.addData("Led2", -((160-blockx)/320));
                 lightOne.setPosition( LedOne );
                 lightTwo.setPosition( LedTwo );*/
-                lightOne.setPosition(0.315);
-                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble == false || block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS) {
+                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble == false || block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && LaunchRumble == true) {
                     gamepad1.rumble(100);
                     gamepad2.rumble(100);
                     lightOne.setPosition(0.4409);
                 }
+                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS){
+                    lightOne.setPosition(0.4409);
+                }else {
+                    lightOne.setPosition(0.315);
+                }
+            }
+            if (block.id != 4 || block.id != 5){
+                lightOne.setPosition(0.315);
             }
         }
         telemetry.addData("Distance", distance);
