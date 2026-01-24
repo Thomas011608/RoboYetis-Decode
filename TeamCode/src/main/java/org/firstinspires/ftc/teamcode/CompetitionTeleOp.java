@@ -13,7 +13,7 @@ import com.qualcomm.hardware.dfrobot.HuskyLens;
 
 
 @TeleOp(name = "CompetitionTeleOp", group = "Linear OpMode")
-public class CompetitionTeleOp extends LinearOpMode {
+public class  CompetitionTeleOp extends LinearOpMode {
     double distance = 0;
 
     // HEADER: Declare OpMode members for each of the motors.
@@ -74,7 +74,6 @@ public class CompetitionTeleOp extends LinearOpMode {
     private double Xprev = -1;
     public Servo lightOne = null;
     public Servo lightTwo = null;
-
     @Override
     public void runOpMode() {
 
@@ -529,17 +528,19 @@ public class CompetitionTeleOp extends LinearOpMode {
         for (HuskyLens.Block block : blocks) {
             if (block.id == GoalID) {
                 double area = block.width * block.height;
-                distance = Math.pow((area / 16139259.8), (1 / -1.89076));
+                /*distance = Math.pow((area / 16139259.8), (1 / -1.89076));
                 double blockx = block.x;
                 double LedOne = blockx / 320;
                 double LedTwo = -((160-blockx)/320);
                 telemetry.addData("Led1",blockx / 320 );
                 telemetry.addData("Led2", -((160-blockx)/320));
                 lightOne.setPosition( LedOne );
-                lightTwo.setPosition( LedTwo );
+                lightTwo.setPosition( LedTwo );*/
+                lightOne.setPosition(0.315);
                 if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble == false || block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS) {
                     gamepad1.rumble(100);
                     gamepad2.rumble(100);
+                    lightOne.setPosition(0.4409);
                 }
             }
         }
