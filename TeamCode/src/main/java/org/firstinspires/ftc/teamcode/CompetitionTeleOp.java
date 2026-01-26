@@ -38,7 +38,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
     final double LAUNCH_TIME_SECONDS = 5.0; //The maximum time that the launcher is on for
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
     final double FEED_TIME_SECONDS = 0.5; //The feeder servos run this long when a shot is requested.
-    final double INTAKE_TIMER = 1.0;
+    final double INTAKE_TIMER = 2.0;
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double MAX_SPEED_REVERSE = -1.0;
     final double HOLD_SPEED = 0.6;
@@ -314,7 +314,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
             if (distance < 130) {
                 power = 1300;
             } else if (distance > 240) {
-                power = 1475;
+                power = 1450;
             } else {
                 power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
             }
@@ -373,39 +373,57 @@ public class  CompetitionTeleOp extends LinearOpMode {
             }
             break;
             case SPINUP: {
-                intakeState = IntakeState.IDLE;
                 launcher.setVelocity(power);
 
                 double X = getCenterX();
                 if (X == -1) {
                     X = Xprev;
                 }
-                if (gamepad1.left_stick_x == 0 && gamepad1.left_stick_y == 0 && gamepad1.right_stick_x == 0){
-                    if (X != -1) {
-                        if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
-                            turnLeft(0.6 * DRIVING_SPEED_MULTIPLIER);
-                        }
-                        if (X > 160 + POSITION_ALIGNMENT_PIXELS) {
-                            turnRight(0.6 * DRIVING_SPEED_MULTIPLIER);
-                        }
-                        if (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS) {
-                            turnLeft(STOP_SPEED);
-                            if (launcher.getVelocity() >= power - 100 && leftShotRequested) {
-                                leftFeeder.setPower(MAX_SPEED);
-                                intake.setPower(MAX_SPEED);
-                                launchTimer.reset();
-                                feederTimer.reset();
-                                launchState = LaunchState.LEFTLAUNCH;
+                if (distance < 240) {
+                    if (gamepad1.left_stick_x == 0 && gamepad1.left_stick_y == 0 && gamepad1.right_stick_x == 0) {
+                        if (X != -1) {
+                            if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
+                                turnLeft(0.6 * DRIVING_SPEED_MULTIPLIER);
                             }
-                            if (launcher.getVelocity() >= power - 100 && rightShotRequested) {
-                                rightFeeder.setPower(MAX_SPEED);
-                                intake.setPower(MAX_SPEED);
-                                launchTimer.reset();
-                                feederTimer.reset();
-                                launchState = LaunchState.RIGHTLAUNCH;
+                            if (X > 160 + POSITION_ALIGNMENT_PIXELS) {
+                                turnRight(0.6 * DRIVING_SPEED_MULTIPLIER);
+                            }
+                            if (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS) {
+                                turnLeft(STOP_SPEED);
+                                if (launcher.getVelocity() >= power - 100 && leftShotRequested) {
+                                    leftFeeder.setPower(MAX_SPEED);
+                                    intake.setPower(MAX_SPEED);
+                                    launchTimer.reset();
+                                    feederTimer.reset();
+                                    launchState = LaunchState.LEFTLAUNCH;
+                                }
+                                if (launcher.getVelocity() >= power - 100 && rightShotRequested) {
+                                    rightFeeder.setPower(MAX_SPEED);
+                                    intake.setPower(MAX_SPEED);
+                                    launchTimer.reset();
+                                    feederTimer.reset();
+                                    launchState = LaunchState.RIGHTLAUNCH;
+                                }
                             }
                         }
                     }
+                }
+                if ((launcher.getVelocity() >= (power - 100)) && (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS)){
+                    gamepad2.rumble(100);
+                }
+                if (launcher.getVelocity() >= power - 100 && leftShotRequested) {
+                    leftFeeder.setPower(MAX_SPEED);
+                    intake.setPower(MAX_SPEED);
+                    launchTimer.reset();
+                    feederTimer.reset();
+                    launchState = LaunchState.LEFTLAUNCH;
+                }
+                if (launcher.getVelocity() >= power - 100 && rightShotRequested) {
+                    rightFeeder.setPower(MAX_SPEED);
+                    intake.setPower(MAX_SPEED);
+                    launchTimer.reset();
+                    feederTimer.reset();
+                    launchState = LaunchState.RIGHTLAUNCH;
                 }
                 Xprev = X;
 
@@ -424,18 +442,18 @@ public class  CompetitionTeleOp extends LinearOpMode {
                     rightFeeder.setPower(STOP_SPEED);
                 }
                 if (rightShotRequested && launcher.getVelocity() >= power-100 ){
-                    launchState = LaunchState.RIGHTLAUNCH;
                     rightFeeder.setPower(MAX_SPEED);
                     intake.setPower(MAX_SPEED);
                     launchTimer.reset();
                     feederTimer.reset();
+                    launchState = LaunchState.RIGHTLAUNCH;
                 }
                 if (leftShotRequested && launcher.getVelocity() >= power-100 ) {
-                    launchState = LaunchState.LEFTLAUNCH;
                     leftFeeder.setPower(MAX_SPEED);
                     intake.setPower(MAX_SPEED);
                     launchTimer.reset();
                     feederTimer.reset();
+                    launchState = LaunchState.LEFTLAUNCH;
                 }
                 if(quit || shotRequested){
                     launchState = LaunchState.IDLE;
@@ -452,18 +470,18 @@ public class  CompetitionTeleOp extends LinearOpMode {
                     leftFeeder.setPower(STOP_SPEED);
                 }
                 if (rightShotRequested && launcher.getVelocity() >= power-100){
-                    launchState = LaunchState.RIGHTLAUNCH;
                     rightFeeder.setPower(MAX_SPEED);
                     intake.setPower(MAX_SPEED);
                     launchTimer.reset();
                     feederTimer.reset();
+                    launchState = LaunchState.RIGHTLAUNCH;
                 }
                 if (leftShotRequested && launcher.getVelocity() >= power-100) {
-                    launchState = LaunchState.LEFTLAUNCH;
                     leftFeeder.setPower(MAX_SPEED);
                     intake.setPower(MAX_SPEED);
                     launchTimer.reset();
                     feederTimer.reset();
+                    launchState = LaunchState.LEFTLAUNCH;
                 }
                 if(quit || shotRequested){
                     launchState = LaunchState.IDLE;
@@ -531,20 +549,21 @@ public class  CompetitionTeleOp extends LinearOpMode {
         for (HuskyLens.Block block : blocks) {
             if (block.id == GoalID) {
                 double area = block.width * block.height;
-                /*distance = Math.pow((area / 16139259.8), (1 / -1.89076));
-                double blockx = block.x;
+                distance = Math.pow((area / 16139259.8), (1 / -1.89076));
+                /*double blockx = block.x;
                 double LedOne = blockx / 320;
                 double LedTwo = -((160-blockx)/320);
                 telemetry.addData("Led1",blockx / 320 );
                 telemetry.addData("Led2", -((160-blockx)/320));
                 lightOne.setPosition( LedOne );
                 lightTwo.setPosition( LedTwo );*/
-                if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble || block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && LaunchRumble) {
+                /*if ((block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && launcher.getVelocity() == 0 && LaunchRumble) || (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS && LaunchRumble)) {
                     gamepad1.rumble(100);
                     gamepad2.rumble(100);
                     lightOne.setPosition(0.4409);
-                }
+                }*/
                 if (block.x > 160-POSITION_ALIGNMENT_PIXELS && block.x < 160 + POSITION_ALIGNMENT_PIXELS){
+                    gamepad1.rumble(100);
                     lightOne.setPosition(0.4409);
                 }else {
                     lightOne.setPosition(0.315);
