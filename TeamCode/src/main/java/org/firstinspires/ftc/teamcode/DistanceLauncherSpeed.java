@@ -13,15 +13,14 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@Disabled
 @TeleOp(name = "DistanceLauncherSpeed", group = "Test")
 public class DistanceLauncherSpeed extends LinearOpMode {
 
     private static HuskyLens huskyLens = null;
     private DcMotorEx launcher = null;
-    private CRServo leftFeeder = null;
-    private CRServo rightFeeder = null;
-    double LAUNCH_MOTOR_SET_SPEED = 0;
+    private DcMotor leftFeeder = null;
+    private DcMotor rightFeeder = null;
+    double LAUNCH_MOTOR_SET_SPEED = 1000;
     double LAUNCH_MOTOR_MIN_SPEED = LAUNCH_MOTOR_SET_SPEED - 100;
     double LAUNCH_TIME_SECONDS = 1;
     double MAX_SPEED = 1;
@@ -35,7 +34,7 @@ public class DistanceLauncherSpeed extends LinearOpMode {
         // HEADER: Configure HuskyLens
         int READ_PERIOD = 1;
 
-        huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
+        huskyLens = hardwareMap.get(HuskyLens.class, "camera");
         Deadline rateLimit = new Deadline(READ_PERIOD, TimeUnit.SECONDS);
         rateLimit.expire();
         if (!huskyLens.knock()) {
@@ -55,8 +54,8 @@ public class DistanceLauncherSpeed extends LinearOpMode {
         launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //HEADER: Configure Feeder Servos
-        leftFeeder = hardwareMap.get(CRServo.class,"left_feeder");
-        rightFeeder = hardwareMap.get(CRServo.class,"right_feeder");
+        leftFeeder = hardwareMap.get(DcMotor.class,"left_feeder");
+        rightFeeder = hardwareMap.get(DcMotor.class,"right_feeder");
         leftFeeder.setPower(STOP_SPEED);
         rightFeeder.setPower(STOP_SPEED);
         //Set Servo Direction
@@ -85,13 +84,13 @@ public class DistanceLauncherSpeed extends LinearOpMode {
                 telemetry.addData("Area", area);
             }
 
-            if (gamepad1.aWasPressed()) {
-                LAUNCH_MOTOR_SET_SPEED += 100;
+            if (gamepad1.a) {
+                LAUNCH_MOTOR_SET_SPEED += 25;
                 LAUNCH_MOTOR_MIN_SPEED = LAUNCH_MOTOR_SET_SPEED - 100;
             }
 
             if (gamepad1.bWasPressed()) {
-                LAUNCH_MOTOR_SET_SPEED -= 100;
+                LAUNCH_MOTOR_SET_SPEED -= 25;
                 LAUNCH_MOTOR_MIN_SPEED = LAUNCH_MOTOR_SET_SPEED - 100;
             }
 
@@ -118,18 +117,24 @@ public class DistanceLauncherSpeed extends LinearOpMode {
             //double power = 0.117582*(Math.pow(distance,2)) - 37.19797*distance + 4136.25617;
             //double power = 0.0610355*(Math.pow(distance,2)) - 19.20547*distance + 2718.58097;
             double power;
-            if (distance<130){
-                power = 1300;
+            if (distance<50){
+                power = 1225;
             } else if (distance>240){
                 power = 1475;
             } else {
-                power = 0.0360562*(Math.pow(distance,2)) - 11.25698*distance + 2092.27902;
+                //power = 0.0360562*(Math.pow(distance,2)) - 11.25698*distance + 2092.27902;
+                power = 0.744271*distance + 1181.73642;
             }
             telemetry.addData("Power",power);
 
             if (gamepad1.dpadUpWasPressed()){
                 LAUNCH_MOTOR_SET_SPEED = power;
                 LAUNCH_MOTOR_MIN_SPEED = LAUNCH_MOTOR_SET_SPEED - 100;
+            }
+
+            if (gamepad1.dpadDownWasPressed()) {
+                launcher.setVelocity(STOP_SPEED);
+                launcher.setPower(STOP_SPEED);
             }
 
             telemetry.addData("Target Speed", LAUNCH_MOTOR_SET_SPEED);
