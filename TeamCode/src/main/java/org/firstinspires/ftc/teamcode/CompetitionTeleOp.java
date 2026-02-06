@@ -14,8 +14,6 @@ import com.qualcomm.hardware.dfrobot.HuskyLens;
 
 @TeleOp(name = "CompetitionTeleOp", group = "ACompetition")
 public class  CompetitionTeleOp extends LinearOpMode {
-    double distance = 0;
-
     // HEADER: Declare OpMode members for each of the motors.
     private DcMotor frontLeftDrive = null;
     private DcMotor backLeftDrive = null;
@@ -26,6 +24,8 @@ public class  CompetitionTeleOp extends LinearOpMode {
     private DcMotor rightFeeder = null;
     private DcMotor intake = null;
     private Servo SortPaddle = null;
+    public Servo lightOne = null;
+    public Servo lightTwo = null;
     NormalizedColorSensor colorSensor;
     private HuskyLens huskyLens; //huskyLens is the variable of our camera
 
@@ -35,13 +35,11 @@ public class  CompetitionTeleOp extends LinearOpMode {
     ElapsedTime runtime = new ElapsedTime();
 
     // HEADER: Defining final variables
-    final double LAUNCH_TIME_SECONDS = 5.0; //The maximum time that the launcher is on for
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
     final double FEED_TIME_SECONDS = 0.5; //The feeder servos run this long when a shot is requested.
     final double INTAKE_TIMER = 2.0;
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double MAX_SPEED_REVERSE = -1.0;
-    final double HOLD_SPEED = 0.6;
     final double STOP_SPEED = 0.0;
     final double leftSort = 0.0;
     final double idleSort = 0.5;
@@ -49,8 +47,9 @@ public class  CompetitionTeleOp extends LinearOpMode {
     final double LAUNCHER_TARGET_VELOCITY_FAST = 1400;
     final double LAUNCHER_TARGET_VELOCITY_SLOW = 1200;
     final double DRIVING_SPEED_MULTIPLIER = 1.0;
-    final float GAIN = 12;
-    private enum LaunchState{
+
+    //HEADER: Defining remaining variables
+    private enum LaunchState {
         IDLE,
         REJECTLEFT,
         REJECTRIGHT,
@@ -65,15 +64,14 @@ public class  CompetitionTeleOp extends LinearOpMode {
         OUTTAKE
     }
 
-    // HEADER: Define other variables
     private int GoalID = 0;
     private boolean AdaptiveLaunchSpeed = true;
     private boolean LaunchRumble = false;
+    private double Xprev = -1;
+    double distance = 0;
     private LaunchState launchState = LaunchState.IDLE;
     private IntakeState intakeState = IntakeState.IDLE;
-    private double Xprev = -1;
-    public Servo lightOne = null;
-    public Servo lightTwo = null;
+
     @Override
     public void runOpMode() {
 
@@ -132,18 +130,20 @@ public class  CompetitionTeleOp extends LinearOpMode {
         rightFeeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftFeeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // HEADER: Gate Servo Definitions
-        SortPaddle = hardwareMap.get(Servo.class, "sorting_gate");
-        SortPaddle.setPosition(idleSort);
-
         // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class, "intake");
         intake.setDirection(DcMotor.Direction.REVERSE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        /*
         // HEADER: Color Sensor Definitions
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
         final float[] hsvValues = new float[3];
+
+        // HEADER: Gate Servo Definitions
+        SortPaddle = hardwareMap.get(Servo.class, "sorting_gate");
+        SortPaddle.setPosition(idleSort);
+         */
 
         // HEADER: Camera Definitions and Initialization
         huskyLens = hardwareMap.get(HuskyLens.class, "camera");
