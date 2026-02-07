@@ -377,137 +377,22 @@ public class CloseLaunchPathing extends LinearOpMode {
         waitForStart();
         if (isStopRequested()) return;
 
-
-        //HEADER: GPP
-        if (ID == 1){
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            new SequentialAction(
-                                    launcher.Wait(),
-                                    driveToIntake.build(),
-                                    launcher.Wait(),
-                                    driveWhileIntake.build(),
-                                    launcher.Wait(),
-                                    reverseToLaunch.build(),
-                                    launcher.Wait(),
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
-
-        //HEADER: PGP
-        else if (ID == 2){
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            launcher.SpinUp(),
-
-                            new SequentialAction(
-                                    //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerRed(),
-                                    launcher.Wait(),
-                                    launcher.SetTargetVelocity(),
-
-                                    //Purple 1
-                                    launcher.LaunchRight(),
-
-                                    //Green
-                                    launcher.LaunchLeft(),
-
-                                    //Purple 2
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.SpinDown(),
-
-                                    //Move toward the intake & Collect balls
-                                    driveToIntake.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
-
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            //moveToLaunch.build(),
-                                            reverseToLaunch.build(),
-                                            launcher.SpinUp()
-                                    ),
-
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
-
-                                    //Move out of launch zone
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
-
-        //HEADER: PPG
-        else {
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            launcher.SpinUp(),
-
-                            new SequentialAction(
-                                    //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerRed(),
-                                    launcher.Wait(),
-                                    launcher.SetTargetVelocity(),
-
-                                    //Purple 1
-                                    launcher.LaunchRight(),
-
-                                    //Purple 2
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-
-                                    //Green
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
-
-                                    //Move toward the intake & Collect balls
-                                    driveToIntake.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
-
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            //moveToLaunch.build(),
-                                            reverseToLaunch.build(),
-                                            launcher.SpinUp()
-                                    ),
-
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
-
-                                    //Move out of launch zone
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
+        Actions.runBlocking(
+                new ParallelAction(
+                        //Turn and spin up
+                        goalAlign.build(),
+                        new SequentialAction(
+                                launcher.Wait(),
+                                driveToIntake.build(),
+                                launcher.Wait(),
+                                driveWhileIntake.build(),
+                                launcher.Wait(),
+                                reverseToLaunch.build(),
+                                launcher.Wait(),
+                                driveAway.build()
+                        )
+                )
+        );
 
     }
 }
