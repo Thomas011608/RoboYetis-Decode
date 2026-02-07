@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -36,7 +37,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
 
     // HEADER: Defining final variables
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
-    final double FEED_TIME_SECONDS = 0.5; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME_SECONDS = 0.5; //The feedes run trhis long when a shot is requested.
     final double INTAKE_TIMER = 2.0;
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double MAX_SPEED_REVERSE = -1.0;
@@ -101,7 +102,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
 
         //Set Driving Direction
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
         backRightDrive.setDirection(DcMotor.Direction.FORWARD);
         //Set Driving Zero Power Behavior
@@ -124,7 +125,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
         rightFeeder = hardwareMap.get(DcMotor.class, "right_feeder");
         leftFeeder.setPower(STOP_SPEED);
         rightFeeder.setPower(STOP_SPEED);
-        //Set Servo Direction
+        //Set Motor Direction
         leftFeeder.setDirection(DcMotor.Direction.FORWARD);
         rightFeeder.setDirection(DcMotor.Direction.REVERSE);
         rightFeeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -132,7 +133,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
 
         // HEADER: Intake Motor Definitions
         intake = hardwareMap.get(DcMotor.class, "intake");
-        intake.setDirection(DcMotor.Direction.REVERSE);
+        intake.setDirection(DcMotor.Direction.FORWARD);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         /*
@@ -228,7 +229,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
             // HEADER: Call various functions used for intake and launching
             intakeBall(gamepad2.dpadDownWasPressed(), gamepad2.leftBumperWasPressed());
             launch(gamepad2.yWasPressed(), gamepad2.xWasPressed(), gamepad2.bWasPressed(), gamepad2.aWasPressed(), AdaptiveLaunchSpeed);
-            sort(gamepad2.dpadLeftWasPressed(), gamepad2.dpadUpWasPressed(), gamepad2.dpadRightWasPressed());
+            //sort(gamepad2.dpadLeftWasPressed(), gamepad2.dpadUpWasPressed(), gamepad2.dpadRightWasPressed());
 
             // HEADER: Use telemetry to print any desired information to the driver hub
             telemetry.addData("Launch State", launchState);
@@ -239,6 +240,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
         }
     }
 
+    /*
     //HEADER: sort() function
     void sort(boolean Left, boolean Idle, boolean Right) {
         // Set sorting servo to neutral (D-Pad Up).
@@ -256,6 +258,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
             SortPaddle.setPosition(leftSort);
         }
     }
+     */
 
     // HEADER: intakeBall() function
     void intakeBall(boolean in, boolean out){
@@ -383,10 +386,10 @@ public class  CompetitionTeleOp extends LinearOpMode {
                     if (gamepad1.left_stick_x == 0 && gamepad1.left_stick_y == 0 && gamepad1.right_stick_x == 0) {
                         if (X != -1) {
                             if (X < 160 - POSITION_ALIGNMENT_PIXELS) {
-                                turnLeft(0.6 * DRIVING_SPEED_MULTIPLIER);
+                                turnLeft(0.4 * DRIVING_SPEED_MULTIPLIER);
                             }
                             if (X > 160 + POSITION_ALIGNMENT_PIXELS) {
-                                turnRight(0.6 * DRIVING_SPEED_MULTIPLIER);
+                                turnRight(0.4 * DRIVING_SPEED_MULTIPLIER);
                             }
                             if (X > 160 - POSITION_ALIGNMENT_PIXELS && X < 160 + POSITION_ALIGNMENT_PIXELS) {
                                 turnLeft(STOP_SPEED);

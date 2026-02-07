@@ -161,7 +161,7 @@ public class CloseAutonomousRED extends LinearOpMode {
 
             intake = hardwareMap.get(DcMotor.class, "intake");
             intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            intake.setDirection(DcMotorSimple.Direction.REVERSE);
+            intake.setDirection(DcMotorSimple.Direction.FORWARD);
         }
         public class Wait implements Action {
             boolean initialized = false;

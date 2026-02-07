@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
+import com.acmerobotics.roadrunner.TurnConstraints;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
@@ -23,14 +24,14 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Config
-@Autonomous(name = "RoadRunnerAutonomousBLUE", group = "Competition")
-public class RoadRunnerAutonomousBLUE extends LinearOpMode {
+@Autonomous(name = "FarAutonomousRED", group = "Competition")
+public class FarAutonomousRED extends LinearOpMode {
     //HEADER: Define Variables
     int ID = 0;
     double distance = -1;
     double power = -1;
     double X = -1;
-    double GOAL_ANGLE_RAD = Math.PI + 0.44;
+    double GOAL_ANGLE_RAD = Math.PI - 0.44;
 
     //Define final variables
     final double STOP_SPEED = 0.0;
@@ -200,13 +201,7 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
 
             intake = hardwareMap.get(DcMotor.class, "intake");
             intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            intake.setDirection(DcMotorSimple.Direction.REVERSE);
-        }
-        public class SpinUp implements Action {
-            public boolean run(@NonNull TelemetryPacket packet) {
-                launcher.setVelocity(1350);
-                return launcher.getVelocity() == 0;
-            }
+            intake.setDirection(DcMotorSimple.Direction.FORWARD);
         }
         public class Wait implements Action {
             boolean initialized = false;
@@ -220,6 +215,12 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
         }
         public Action Wait(){
             return new Wait();
+        }
+        public class SpinUp implements Action {
+            public boolean run(@NonNull TelemetryPacket packet) {
+                launcher.setVelocity(1350);
+                return launcher.getVelocity() == 0;
+            }
         }
         public Action SpinUp() {
             return new SpinUp();
@@ -368,7 +369,7 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d currentPose = new Pose2d(63, -12, Math.toRadians(180));
+        Pose2d currentPose = new Pose2d(63, 12, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
         Launcher launcher = new Launcher(hardwareMap);
         Camera camera = new Camera(hardwareMap);
@@ -383,31 +384,32 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
                 .lineToX(58)
                 .turnTo(GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58, -12, GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(44, -23),3*Math.PI/2);
-        currentPose = new Pose2d(44, -23, 3*Math.PI/2);
+                .splineTo(new Vector2d(30, 36),Math.PI/2);
+        currentPose = new Pose2d(30, 36, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(-46, new TranslationalVelConstraint(12.5));
-        currentPose = new Pose2d(44, -46, 3*Math.PI/2);
+                .lineToY(54, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(30, 54, Math.PI/2);
 
         TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                //.lineToY(-36)
-                //.splineTo(new Vector2d(58,-12),GOAL_ANGLE_RAD);
-                .lineToY(-12)
+                //.lineToY(36)
+                //.splineTo(new Vector2d(58,12),Math.PI)
+                .lineToY(12)
                 .turnTo(Math.PI)
                 .lineToX(58)
                 .turnTo(GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58, -12, GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
 
         /*TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
-                .splineToConstantHeading(new Vector2d(58, -12), 3*Math.PI/2)
-                .turnTo(GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58, -12, GOAL_ANGLE_RAD);*/
-
+                .setTangent(Math.PI)
+                .splineTo(new Vector2d(58, 12), 0)
+                .turnTo(GOAL_ANGLE_RAD+0.2);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD+0.2);
+        */
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
                 .lineToX(24);
@@ -433,7 +435,7 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
 
                             new SequentialAction(
                                     //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerBlue(),
+                                    //camera.GetPowerRed(),
                                     launcher.Wait(),
                                     launcher.SetTargetVelocity(),
 
@@ -464,7 +466,7 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
                                     ),
 
                                     //Set the velocity and launch
-                                    //camera.GetPowerBlue(),
+                                    //camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchLeft(),
                                     launcher.LaunchRight(),
@@ -490,7 +492,7 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
 
                             new SequentialAction(
                                     //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerBlue(),
+                                    //camera.GetPowerRed(),
                                     launcher.Wait(),
                                     launcher.SetTargetVelocity(),
 
@@ -520,7 +522,7 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
                                     ),
 
                                     //Set the velocity and launch
-                                    //camera.GetPowerBlue(),
+                                    //camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchRight(),
                                     launcher.LaunchLeft(),
@@ -546,7 +548,7 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
 
                             new SequentialAction(
                                     //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerBlue(),
+                                    //camera.GetPowerRed(),
                                     launcher.Wait(),
                                     launcher.SetTargetVelocity(),
 
@@ -576,7 +578,7 @@ public class RoadRunnerAutonomousBLUE extends LinearOpMode {
                                     ),
 
                                     //Set the velocity and launch
-                                    //camera.GetPowerBlue(),
+                                    //camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchRight(),
                                     launcher.Intake(),
