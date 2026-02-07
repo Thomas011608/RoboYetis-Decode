@@ -402,14 +402,15 @@ public class FarLaunchPathing extends LinearOpMode {
                 .turnTo(Math.PI)
                 .lineToX(58)
                 .turnTo(GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+        //currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
 
-        /*TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
-                .setTangent(Math.PI)
-                .splineTo(new Vector2d(58, 12), 0)
+        TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
+                .setTangent(0)
+
+                .splineToLinearHeading(new Pose2d(58, 12, GOAL_ANGLE_RAD), Math.PI/2)
                 .turnTo(GOAL_ANGLE_RAD+0.2);
         currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD+0.2);
-        */
+
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
                 .lineToX(24);
@@ -433,13 +434,17 @@ public class FarLaunchPathing extends LinearOpMode {
                                 launcher.Wait(),
                                 //Move toward the intake & Collect balls
                                 driveToIntake.build(),
+                                launcher.Wait(),
                                 driveWhileIntake.build(),
+                                launcher.Wait(),
+                                moveToLaunch.build()
 
                                 //Move back and spin up
-                                reverseToLaunch.build(),
+                                //reverseToLaunch.build(),
+                                //launcher.Wait(),
 
                                 //Move out of launch zone
-                                driveForward.build()
+                                //driveForward.build()
                         )
                 )
         );
