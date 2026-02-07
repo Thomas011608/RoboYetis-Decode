@@ -68,7 +68,7 @@ public class FarLaunchPathing extends LinearOpMode {
                         ID = block.id;
                     }
                 }
-                return ID == 0;
+                return false;
             }
         }
         public Action GetObeliskID() {
@@ -406,10 +406,22 @@ public class FarLaunchPathing extends LinearOpMode {
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
                 .setTangent(0)
+                .splineToLinearHeading(new Pose2d(58, 12, GOAL_ANGLE_RAD), Math.PI/2);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
 
-                .splineToLinearHeading(new Pose2d(58, 12, GOAL_ANGLE_RAD), Math.PI/2)
-                .turnTo(GOAL_ANGLE_RAD+0.2);
-        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD+0.2);
+        TrajectoryActionBuilder driveToIntake2 = drive.actionBuilder(currentPose)
+                .turnTo(Math.PI)
+                .splineTo(new Vector2d(6, 36),Math.PI/2);
+        currentPose = new Pose2d(6, 36, Math.PI/2);
+
+        TrajectoryActionBuilder driveWhileIntake2 = drive.actionBuilder(currentPose)
+                .lineToY(54, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(6, 54, Math.PI/2);
+
+        TrajectoryActionBuilder moveToLaunch2 = drive.actionBuilder(currentPose)
+                .setTangent(0)
+                .splineToLinearHeading(new Pose2d(58, 12, GOAL_ANGLE_RAD), Math.PI/2);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
@@ -437,7 +449,13 @@ public class FarLaunchPathing extends LinearOpMode {
                                 launcher.Wait(),
                                 driveWhileIntake.build(),
                                 launcher.Wait(),
-                                moveToLaunch.build()
+                                moveToLaunch.build(),
+                                launcher.Wait(),
+                                driveToIntake2.build(),
+                                launcher.Wait(),
+                                driveWhileIntake2.build(),
+                                launcher.Wait(),
+                                moveToLaunch2.build()
 
                                 //Move back and spin up
                                 //reverseToLaunch.build(),
