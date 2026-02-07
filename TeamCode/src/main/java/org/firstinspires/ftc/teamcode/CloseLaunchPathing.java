@@ -367,13 +367,6 @@ public class CloseLaunchPathing extends LinearOpMode {
                 .turnTo(Math.toRadians(45))
                 .lineToX(0);
 
-
-        while (!isStopRequested() && !opModeIsActive()) {
-            Actions.runBlocking(camera.GetObeliskID());
-            telemetry.addData("ID", ID);
-            telemetry.update();
-        }
-
         waitForStart();
         if (isStopRequested()) return;
 

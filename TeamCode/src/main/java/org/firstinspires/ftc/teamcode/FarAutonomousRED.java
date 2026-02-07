@@ -68,7 +68,7 @@ public class FarAutonomousRED extends LinearOpMode {
                         ID = block.id;
                     }
                 }
-                return ID == 0;
+                return false;
             }
         }
         public Action GetObeliskID() {
