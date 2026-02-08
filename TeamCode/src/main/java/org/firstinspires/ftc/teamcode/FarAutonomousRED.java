@@ -369,6 +369,7 @@ public class FarAutonomousRED extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        int spikeNumber = -1;
         Pose2d currentPose = new Pose2d(63, 12, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
         Launcher launcher = new Launcher(hardwareMap);
@@ -430,6 +431,16 @@ public class FarAutonomousRED extends LinearOpMode {
 
         while (!isStopRequested() && !opModeIsActive()) {
             Actions.runBlocking(camera.GetObeliskID());
+            if (gamepad1.dpadUpWasPressed()){
+                spikeNumber = 1;
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                spikeNumber = 0;
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                spikeNumber = 2;
+            }
+            telemetry.addData("Number of spikes collected", spikeNumber);
             telemetry.addData("ID", ID);
             telemetry.update();
         }
@@ -440,195 +451,533 @@ public class FarAutonomousRED extends LinearOpMode {
 
         //HEADER: GPP
         if (ID == 1){
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            launcher.SpinUp(),
+            if (spikeNumber == 0) {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
 
-                            new SequentialAction(
-                                    //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerRed(),
-                                    launcher.Wait(),
-                                    launcher.SetTargetVelocity(),
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
-                                    //Green
-                                    launcher.LaunchLeft(),
+                                        //Intake
+                                        launcher.Intake(),
 
-                                    //Purple 1
-                                    launcher.LaunchRight(),
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
-                                    //Purple 2
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.SpinDown(),
+                                        //Drive to the first spike marker and intake the balls
+                                        driveToIntake.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake.build()
+                                        ),
 
-                                    //Move toward the intake & Collect balls
-                                    driveToIntake.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch.build(),
+                                                launcher.SpinUp()
+                                        ),
 
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            //moveToLaunch.build(),
-                                            reverseToLaunch.build(),
-                                            launcher.SpinUp(),
-                                            launcher.FeedBack()
-                                    ),
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
 
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
+                                        //Launch 2 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
-                                    //Move out of launch zone
-                                    driveForward.build()
-                            )
-                    )
-            );
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 2 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Drive to the second spike marker and intake the balls
+                                        driveToIntake2.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake2.build()
+                                        ),
+
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch2.build(),
+                                                launcher.SpinUp()
+                                        ),
+
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 3 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 3 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            }
+            else if (spikeNumber == 1) {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Drive to the first spike marker and intake the balls
+                                        driveToIntake.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake.build()
+                                        ),
+
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch.build(),
+                                                launcher.SpinUp()
+                                        ),
+
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 2 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 2 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            } else {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            }
         }
 
         //HEADER: PGP
         else if (ID == 2){
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            launcher.SpinUp(),
+            if (spikeNumber == 0) {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
 
-                            new SequentialAction(
-                                    //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerRed(),
-                                    launcher.Wait(),
-                                    launcher.SetTargetVelocity(),
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
-                                    //Purple 1
-                                    launcher.LaunchRight(),
+                                        //Intake
+                                        launcher.Intake(),
 
-                                    //Green
-                                    launcher.LaunchLeft(),
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
-                                    //Purple 2
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.SpinDown(),
+                                        //Drive to the first spike marker and intake the balls
+                                        driveToIntake.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake.build()
+                                        ),
 
-                                    //Move toward the intake & Collect balls
-                                    driveToIntake.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch.build(),
+                                                launcher.SpinUp()
+                                        ),
 
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            //moveToLaunch.build(),
-                                            reverseToLaunch.build(),
-                                            launcher.SpinUp()
-                                    ),
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
 
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
+                                        //Launch 2 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
-                                    //Move out of launch zone
-                                    driveForward.build()
-                            )
-                    )
-            );
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 2 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Drive to the second spike marker and intake the balls
+                                        driveToIntake2.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake2.build()
+                                        ),
+
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch2.build(),
+                                                launcher.SpinUp()
+                                        ),
+
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 3 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 3 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            }
+            else if (spikeNumber == 1) {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Drive to the first spike marker and intake the balls
+                                        driveToIntake.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake.build()
+                                        ),
+
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch.build(),
+                                                launcher.SpinUp()
+                                        ),
+
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 2 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 2 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            } else {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            }
         }
 
         //HEADER: PPG
         else {
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            launcher.SpinUp(),
+            if (spikeNumber == 0) {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
 
-                            new SequentialAction(
-                                    //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerRed(),
-                                    launcher.Wait(),
-                                    launcher.SetTargetVelocity(),
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
-                                    //Purple 1
-                                    launcher.LaunchRight(),
+                                        //Intake
+                                        launcher.Intake(),
 
-                                    //Purple 2
-                                    launcher.LaunchLeft(),
-                                    launcher.Intake(),
-                                    launcher.LaunchLeft(),
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
-                                    //Green
-                                    launcher.LaunchRight(),
-                                    //launcher.SpinDown(),
+                                        //Drive to the first spike marker and intake the balls
+                                        driveToIntake.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake.build()
+                                        ),
 
-                                    //Move toward the intake & Collect balls
-                                    driveToIntake.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch.build(),
+                                                launcher.SpinUp()
+                                        ),
 
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            moveToLaunch.build(),
-                                            //reverseToLaunch.build(),
-                                            launcher.SpinUp()
-                                    ),
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
 
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.Intake(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    //launcher.SpinDown(),
+                                        //Launch 2 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
-                                    driveToIntake2.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake2.build()
-                                    ),
+                                        //Intake
+                                        launcher.Intake(),
 
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            moveToLaunch2.build(),
-                                            //reverseToLaunch.build(),
-                                            launcher.SpinUp()
-                                    ),
+                                        //Launch 2 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.Intake(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.SpinDown(),
+                                        //Drive to the second spike marker and intake the balls
+                                        driveToIntake2.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake2.build()
+                                        ),
 
-                                    //Move out of launch zone
-                                    driveForward.build()
-                            )
-                    )
-            );
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch2.build(),
+                                                launcher.SpinUp()
+                                        ),
+
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 3 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 3 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            }
+            else if (spikeNumber == 1) {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Drive to the first spike marker and intake the balls
+                                        driveToIntake.build(),
+                                        new ParallelAction(
+                                                launcher.PickUp(),
+                                                driveWhileIntake.build()
+                                        ),
+
+                                        //Move to the far launch triangle and get ready to launch
+                                        new ParallelAction(
+                                                moveToLaunch.build(),
+                                                launcher.SpinUp()
+                                        ),
+
+                                        //Set the velocity
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 2 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 2 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            } else {
+                Actions.runBlocking(
+                        new ParallelAction(
+                                //Turn and spin up
+                                goalAlign.build(),
+                                launcher.SpinUp(),
+                                new SequentialAction(
+                                        //Set spin velocity, launch in the correct order
+                                        launcher.Wait(),
+                                        launcher.SetTargetVelocity(),
+
+                                        //Launch 1 Round 1
+                                        launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
+                                        //Intake
+                                        launcher.Intake(),
+
+                                        //Launch 1 Round 2
+                                        launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
+
+                                        //Spin Down
+                                        launcher.SpinDown(),
+
+                                        //Move out of launch zone
+                                        driveForward.build()
+                                )
+                        )
+                );
+            }
         }
 
     }
