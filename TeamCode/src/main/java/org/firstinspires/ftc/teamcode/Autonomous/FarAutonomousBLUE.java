@@ -30,7 +30,7 @@ public class FarAutonomousBLUE extends LinearOpMode {
     double distance = -1;
     double power = -1;
     double X = -1;
-    double GOAL_ANGLE_RAD = Math.PI + 0.44;
+    double GOAL_ANGLE_RAD = Math.PI + 0.44 - 0.05;
 
     //Define final variables
     final double STOP_SPEED = 0.0;
@@ -388,34 +388,34 @@ public class FarAutonomousBLUE extends LinearOpMode {
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(31, -36),Math.PI/2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(31, -36, Math.PI/2);
+                .splineTo(new Vector2d(31, -36),-Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(31, -36, -Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
                 .lineToY(-72, new TranslationalVelConstraint(18));
-        currentPose = new Pose2d(31, -72, Math.PI/2);
+        currentPose = new Pose2d(31, -72, -Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
                 .setTangent(0)
-                .splineToLinearHeading(new Pose2d(56, -12, GOAL_ANGLE_RAD), Math.PI/2, new TranslationalVelConstraint(80));
+                .splineToLinearHeading(new Pose2d(56, -12, GOAL_ANGLE_RAD), -Math.PI/2, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(56, -12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake2 = drive.actionBuilder(currentPose)
-                .turnTo(Math.PI)
-                .splineTo(new Vector2d(6, -36),Math.PI/2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(6, -36, Math.PI/2);
+                .turnTo(-Math.PI)
+                .splineTo(new Vector2d(6, -36),-Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(6, -36, -Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake2 = drive.actionBuilder(currentPose)
                 .lineToY(-72, new TranslationalVelConstraint(18));
-        currentPose = new Pose2d(6, -72, Math.PI/2);
+        currentPose = new Pose2d(6, -72, -Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch2 = drive.actionBuilder(currentPose)
                 .setTangent(0)
-                .splineToLinearHeading(new Pose2d(54, -12, GOAL_ANGLE_RAD), Math.PI/2, new TranslationalVelConstraint(80));
+                .splineToLinearHeading(new Pose2d(54, -12, GOAL_ANGLE_RAD), -Math.PI/2, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(54, -12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
-                .turnTo(Math.PI)
+                .turnTo(-Math.PI)
                 .lineToX(24, new TranslationalVelConstraint(80));
 
 
