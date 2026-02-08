@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Autonomous;
 import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import org.firstinspires.ftc.teamcode.road_runner.MecanumDrive;
+import org.firstinspires.ftc.teamcode.Autonomous.road_runner.MecanumDrive;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,23 +23,21 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Config
-@Autonomous(name = "CloseAutonomousBLUE", group = "Competition")
-public class CloseAutonomousBLUE extends LinearOpMode {
+@Autonomous(name = "FarLaunchPathing", group = "Test")
+public class FarLaunchPathing extends LinearOpMode {
     //HEADER: Define Variables
     int ID = 0;
     double distance = -1;
     double power = -1;
-    double GOAL_ANGLE_RAD = Math.toRadians(142);
+    double X = -1;
+    double GOAL_ANGLE_RAD = Math.PI - 0.44;
 
     //Define final variables
     final double STOP_SPEED = 0.0;
     final double MAX_SPEED = 1.0;
-    final double FEED_TIME_SECONDS = 0.3;
-    final double LAUNCH_INTAKE_TIME_SECONDS = 0.8;
-    final double INTAKE_IN_TIME_SECONDS = 2.5;
-    final double INTAKE_SPEED_ONE = 20;
-    final double INTAKE_SPEED_TWO = 20;
-    final double LAUNCH_POWER = 1225;
+    final double FEED_TIME_SECONDS = 1.5;
+    final double INTAKE_TIME_SECONDS = 0.3;
+    final double INTAKE_IN_TIME_SECONDS = 3.5;
 
     //Define timers
     ElapsedTime rightFeederTimer = new ElapsedTime();
@@ -52,7 +50,6 @@ public class CloseAutonomousBLUE extends LinearOpMode {
     public class Camera {
         //Initialize Camera
         private HuskyLens huskyLens;
-
         public Camera(HardwareMap hardwareMap) {
             huskyLens = hardwareMap.get(HuskyLens.class, "camera");
             if (!huskyLens.knock()) {
@@ -66,17 +63,118 @@ public class CloseAutonomousBLUE extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket packet) {
                 HuskyLens.Block[] blocks = huskyLens.blocks();
                 for (HuskyLens.Block block : blocks) {
-                    if ((block.id == 1 || block.id == 2 || block.id == 3) && ID == 0) {
+                    if (block.id == 1 || block.id == 2 || block.id == 3) {
                         ID = block.id;
                     }
                 }
                 return false;
             }
         }
-
         public Action GetObeliskID() {
             return new GetObeliskID();
         }
+
+        //Set the distance and power variables when the AprilTag detected has ID 4
+        public class GetPowerRed implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (block.id == 4) {
+                        //Custom distance function
+                        double area = block.width * block.height;
+                        distance = Math.pow((area / 16139259.8), (1 / -1.89076));
+                    } else {
+                        distance = -1;
+                    }
+                }
+
+                //Custom power function
+                if (distance < 130 && distance != -1) {
+                    power = 1300;
+                } else if (distance > 240) {
+                    power = 1475;
+                } else if (distance != -1){
+                    power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+                } else {
+                    power = -1;
+                }
+                return (power == -1);
+            }
+        }
+        public Action GetPowerRed() {
+            return new GetPowerRed();
+        }
+
+        //Set the distance and power variables when the AprilTag detected has ID 5
+        public class GetPowerBlue implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (block.id == 5) {
+                        //Custom distance function
+                        double area = block.width * block.height;
+                        distance = Math.pow((area / 16139259.8), (1 / -1.89076));
+                    } else {
+                        distance = -1;
+                    }
+                }
+
+                //Custom power function
+                if (distance < 130 && distance != -1) {
+                    power = 1300;
+                } else if (distance > 240) {
+                    power = 1475;
+                } else if (distance != -1){
+                    power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
+                } else {
+                    power = -1;
+                }
+                return power == -1;
+            }
+        }
+        public Action GetPowerBlue() {
+            return new GetPowerBlue();
+        }
+
+        /*
+        //Set the X position variable when the AprilTag detected has ID 4
+        public class GetTagXRed implements Action {
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (block.id == 4) {
+                        X = block.x;
+                    } else {
+                        X = -1;
+                    }
+                }
+                return X == -1;
+            }
+        }
+        public Action GetTagXRed() {
+            return new GetTagXRed();
+        }
+
+        //Set the X position variable when the AprilTag detected has ID 5
+        public class GetTagXBlue implements Action {
+            public boolean run(@NonNull TelemetryPacket packet) {
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                for (HuskyLens.Block block : blocks) {
+                    if (block.id == 5) {
+                        X = block.x;
+                    } else {
+                        X = -1;
+                    }
+                }
+                return X == -1;
+            }
+        }
+        public Action GetTagXBlue() {
+            return new GetTagXBlue();
+        }
+        */
     }
 
     public class Launcher {
@@ -129,7 +227,7 @@ public class CloseAutonomousBLUE extends LinearOpMode {
 
         public class SetTargetVelocity implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
-                power = LAUNCH_POWER;
+                power = 1450;
                 double minPower = power - 50;
                 double maxPower = power + 50;
 
@@ -165,7 +263,7 @@ public class CloseAutonomousBLUE extends LinearOpMode {
                     initialized = true;
                 }
 
-                if (intakeTimer.seconds() > LAUNCH_INTAKE_TIME_SECONDS) {
+                if (intakeTimer.seconds() > INTAKE_TIME_SECONDS) {
                     intake.setPower(STOP_SPEED);
                     return false;
                 } else {
@@ -270,107 +368,103 @@ public class CloseAutonomousBLUE extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d currentPose = new Pose2d(-54, 54, Math.toRadians(135));
+        Pose2d currentPose = new Pose2d(63, 12, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
         Launcher launcher = new Launcher(hardwareMap);
         Camera camera = new Camera(hardwareMap);
+
 
         leftFeederTimer.reset();
         rightFeederTimer.reset();
         backTimer.reset();
         intakeTimer.reset();
 
+        //Create Trajectories to build later
+        TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
+                .lineToX(58)
+                .turnTo(GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+
+        TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
+                .turnTo(Math.PI)
+                .splineTo(new Vector2d(30, 36),Math.PI/2);
+        currentPose = new Pose2d(30, 36, Math.PI/2);
+
+        TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
+                .lineToY(54, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(30, 54, Math.PI/2);
+
+        TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
+                //.lineToY(36)
+                //.splineTo(new Vector2d(58,12),Math.PI)
+                .lineToY(12)
+                .turnTo(Math.PI)
+                .lineToX(58)
+                .turnTo(GOAL_ANGLE_RAD);
+        //currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+
+        TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
+                .setTangent(0)
+                .splineToLinearHeading(new Pose2d(58, 12, GOAL_ANGLE_RAD), Math.PI/2);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+
+        TrajectoryActionBuilder driveToIntake2 = drive.actionBuilder(currentPose)
+                .turnTo(Math.PI)
+                .splineTo(new Vector2d(6, 36),Math.PI/2);
+        currentPose = new Pose2d(6, 36, Math.PI/2);
+
+        TrajectoryActionBuilder driveWhileIntake2 = drive.actionBuilder(currentPose)
+                .lineToY(54, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(6, 54, Math.PI/2);
+
+        TrajectoryActionBuilder moveToLaunch2 = drive.actionBuilder(currentPose)
+                .setTangent(0)
+                .splineToLinearHeading(new Pose2d(58, 12, GOAL_ANGLE_RAD), Math.PI/2);
+        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+
+        TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
+                .turnTo(Math.PI)
+                .lineToX(24);
+
+
         while (!isStopRequested() && !opModeIsActive()) {
             Actions.runBlocking(camera.GetObeliskID());
             telemetry.addData("ID", ID);
             telemetry.update();
         }
-        //HEADER: Create Trajectories to build later
-        TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
-                .lineToX(-24, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-24, 24, Math.toRadians(135));
-
-        TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
-                .turnTo(Math.PI / 2)
-                .splineToConstantHeading(new Vector2d(-14, 40), Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-14, 40, Math.PI / 2);
-
-        TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(66, new TranslationalVelConstraint(INTAKE_SPEED_ONE));
-        currentPose = new Pose2d(-14, 66, Math.PI / 2);
-
-        TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                .lineToY(48)
-                .splineToLinearHeading(new Pose2d(-24, 24, GOAL_ANGLE_RAD), Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-24, 24, GOAL_ANGLE_RAD);
-        TrajectoryActionBuilder driveToIntakeTwo = drive.actionBuilder(currentPose)
-                .turnTo(Math.PI / 2)
-                .splineToConstantHeading(new Vector2d(10, 40), Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(10, 36, Math.PI / 2);
-
-        TrajectoryActionBuilder driveWhileIntakeTwo = drive.actionBuilder(currentPose)
-                .lineToY(74, new TranslationalVelConstraint(INTAKE_SPEED_TWO));
-        currentPose = new Pose2d(10, 74, Math.PI / 2);
-
-        TrajectoryActionBuilder reverseToLaunchTwo = drive.actionBuilder(currentPose)
-                .lineToY(48)
-                .splineToLinearHeading(new Pose2d(-24, 24, GOAL_ANGLE_RAD), Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-24, 24, GOAL_ANGLE_RAD);
-
-        TrajectoryActionBuilder driveAway = drive.actionBuilder(currentPose)
-                .turnTo(Math.toRadians(45))
-                .lineToX(0, new TranslationalVelConstraint(80));
 
         waitForStart();
         if (isStopRequested()) return;
 
+        //HEADER: Actually run the code
         Actions.runBlocking(
                 new ParallelAction(
+                        //Turn and spin up
                         goalAlign.build(),
                         new SequentialAction(
-                                launcher.SpinUp(),
-
-                                launcher.SetTargetVelocity(),
-                                launcher.LaunchLeft(),
-                                launcher.LaunchRight(),
-                                launcher.Intake(),
-                                launcher.LaunchRight(),
-
+                                launcher.Wait(),
+                                //Move toward the intake & Collect balls
                                 driveToIntake.build(),
+                                launcher.Wait(),
+                                driveWhileIntake.build(),
+                                launcher.Wait(),
+                                moveToLaunch.build(),
+                                launcher.Wait(),
+                                driveToIntake2.build(),
+                                launcher.Wait(),
+                                driveWhileIntake2.build(),
+                                launcher.Wait(),
+                                moveToLaunch2.build()
 
-                                new ParallelAction(
-                                        launcher.PickUp(),
-                                        driveWhileIntake.build()
-                                ),
+                                //Move back and spin up
+                                //reverseToLaunch.build(),
+                                //launcher.Wait(),
 
-                                reverseToLaunch.build(),
-
-                                launcher.SetTargetVelocity(),
-                                launcher.LaunchLeft(),
-                                launcher.LaunchRight(),
-                                launcher.Intake(),
-                                launcher.LaunchRight(),
-                                launcher.LaunchLeft(),
-
-                                driveToIntakeTwo.build(),
-
-                                new ParallelAction(
-                                        launcher.PickUp(),
-                                        driveWhileIntakeTwo.build()
-                                ),
-
-                                reverseToLaunchTwo.build(),
-
-                                launcher.SetTargetVelocity(),
-                                launcher.LaunchLeft(),
-                                launcher.LaunchRight(),
-                                launcher.Intake(),
-                                launcher.LaunchRight(),
-                                launcher.LaunchLeft(),
-
-                                driveAway.build()
+                                //Move out of launch zone
+                                //driveForward.build()
                         )
                 )
         );
+
     }
 }
