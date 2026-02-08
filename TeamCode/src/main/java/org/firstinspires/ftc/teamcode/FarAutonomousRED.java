@@ -396,15 +396,6 @@ public class FarAutonomousRED extends LinearOpMode {
                 .lineToY(72, new TranslationalVelConstraint(12.5));
         currentPose = new Pose2d(31, 72, Math.PI/2);
 
-        TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                //.lineToY(36)
-                //.splineTo(new Vector2d(58,12),Math.PI)
-                .lineToY(12)
-                .turnTo(Math.PI)
-                .lineToX(58)
-                .turnTo(GOAL_ANGLE_RAD);
-        //currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
-
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
                 .setTangent(0)
                 .splineToLinearHeading(new Pose2d(56, 12, GOAL_ANGLE_RAD), Math.PI/2, new TranslationalVelConstraint(80));
