@@ -29,7 +29,8 @@ public class CloseAutonomousBLUE extends LinearOpMode {
     int ID = 0;
     double distance = -1;
     double power = -1;
-    double GOAL_ANGLE_RAD = Math.toRadians(142);
+    double GOAL_ANGLE_RAD = Math.toRadians(-142);
+    double spikeNumber = 2;
 
     //Define final variables
     final double STOP_SPEED = 0.0;
@@ -270,7 +271,7 @@ public class CloseAutonomousBLUE extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d currentPose = new Pose2d(-54, 54, Math.toRadians(135));
+        Pose2d currentPose = new Pose2d(-54, -54, Math.toRadians(-135));
         MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
         Launcher launcher = new Launcher(hardwareMap);
         Camera camera = new Camera(hardwareMap);
@@ -280,97 +281,166 @@ public class CloseAutonomousBLUE extends LinearOpMode {
         backTimer.reset();
         intakeTimer.reset();
 
-        while (!isStopRequested() && !opModeIsActive()) {
-            Actions.runBlocking(camera.GetObeliskID());
-            telemetry.addData("ID", ID);
-            telemetry.update();
-        }
         //HEADER: Create Trajectories to build later
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
                 .lineToX(-24, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-24, 24, Math.toRadians(135));
+        currentPose = new Pose2d(-24, -24, Math.toRadians(-135));
+
+        TrajectoryActionBuilder turnToExit = drive.actionBuilder(currentPose)
+                .turnTo(GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
-                .turnTo(Math.PI / 2)
-                .splineToConstantHeading(new Vector2d(-14, 40), Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-14, 40, Math.PI / 2);
+                .turnTo(-Math.PI / 2)
+                .splineToConstantHeading(new Vector2d(-14, -40), -Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-14, -40, -Math.PI / 2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(66, new TranslationalVelConstraint(INTAKE_SPEED_ONE));
-        currentPose = new Pose2d(-14, 66, Math.PI / 2);
+                .lineToY(-66, new TranslationalVelConstraint(INTAKE_SPEED_ONE));
+        currentPose = new Pose2d(-14, -66, -Math.PI / 2);
 
         TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                .lineToY(48)
-                .splineToLinearHeading(new Pose2d(-24, 24, GOAL_ANGLE_RAD), Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-24, 24, GOAL_ANGLE_RAD);
+                .lineToY(-48)
+                .splineToLinearHeading(new Pose2d(-24, -24, GOAL_ANGLE_RAD), -Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-24, -24, GOAL_ANGLE_RAD);
         TrajectoryActionBuilder driveToIntakeTwo = drive.actionBuilder(currentPose)
-                .turnTo(Math.PI / 2)
-                .splineToConstantHeading(new Vector2d(10, 40), Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(10, 36, Math.PI / 2);
+                .turnTo(-Math.PI / 2)
+                .splineToConstantHeading(new Vector2d(10, -40), -Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(10, -36, -Math.PI / 2);
 
         TrajectoryActionBuilder driveWhileIntakeTwo = drive.actionBuilder(currentPose)
-                .lineToY(74, new TranslationalVelConstraint(INTAKE_SPEED_TWO));
-        currentPose = new Pose2d(10, 74, Math.PI / 2);
+                .lineToY(-74, new TranslationalVelConstraint(INTAKE_SPEED_TWO));
+        currentPose = new Pose2d(10, -74, -Math.PI / 2);
 
         TrajectoryActionBuilder reverseToLaunchTwo = drive.actionBuilder(currentPose)
-                .lineToY(48)
-                .splineToLinearHeading(new Pose2d(-24, 24, GOAL_ANGLE_RAD), Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-24, 24, GOAL_ANGLE_RAD);
+                .lineToY(-48)
+                .splineToLinearHeading(new Pose2d(-24, -24, GOAL_ANGLE_RAD), -Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-24, -24, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveAway = drive.actionBuilder(currentPose)
-                .turnTo(Math.toRadians(45))
+                .turnTo(Math.toRadians(-45))
                 .lineToX(0, new TranslationalVelConstraint(80));
+
+        while (!isStopRequested() && !opModeIsActive()) {
+            if (gamepad1.dpadUpWasPressed()) {
+                spikeNumber = 1;
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                spikeNumber = 0;
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                spikeNumber = 2;
+            }
+        }
 
         waitForStart();
         if (isStopRequested()) return;
 
-        Actions.runBlocking(
-                new ParallelAction(
-                        goalAlign.build(),
-                        new SequentialAction(
-                                launcher.SpinUp(),
+        //HEADER: 2 Spikes
+        if (spikeNumber == 2) {
+            Actions.runBlocking(
+                    new ParallelAction(
+                            goalAlign.build(),
+                            new SequentialAction(
+                                    launcher.SpinUp(),
 
-                                launcher.SetTargetVelocity(),
-                                launcher.LaunchLeft(),
-                                launcher.LaunchRight(),
-                                launcher.Intake(),
-                                launcher.LaunchRight(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
 
-                                driveToIntake.build(),
+                                    driveToIntake.build(),
 
-                                new ParallelAction(
-                                        launcher.PickUp(),
-                                        driveWhileIntake.build()
-                                ),
+                                    new ParallelAction(
+                                            launcher.PickUp(),
+                                            driveWhileIntake.build()
+                                    ),
 
-                                reverseToLaunch.build(),
+                                    reverseToLaunch.build(),
 
-                                launcher.SetTargetVelocity(),
-                                launcher.LaunchLeft(),
-                                launcher.LaunchRight(),
-                                launcher.Intake(),
-                                launcher.LaunchRight(),
-                                launcher.LaunchLeft(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
 
-                                driveToIntakeTwo.build(),
+                                    driveToIntakeTwo.build(),
 
-                                new ParallelAction(
-                                        launcher.PickUp(),
-                                        driveWhileIntakeTwo.build()
-                                ),
+                                    new ParallelAction(
+                                            launcher.PickUp(),
+                                            driveWhileIntakeTwo.build()
+                                    ),
 
-                                reverseToLaunchTwo.build(),
+                                    reverseToLaunchTwo.build(),
 
-                                launcher.SetTargetVelocity(),
-                                launcher.LaunchLeft(),
-                                launcher.LaunchRight(),
-                                launcher.Intake(),
-                                launcher.LaunchRight(),
-                                launcher.LaunchLeft(),
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
 
-                                driveAway.build()
-                        )
-                )
-        );
+                                    driveAway.build()
+                            )
+                    )
+            );
+        }
+
+        //HEADER: 3 Spikes
+        else if (spikeNumber == 1) {
+            Actions.runBlocking(
+                    new ParallelAction(
+                            goalAlign.build(),
+                            new SequentialAction(
+                                    launcher.SpinUp(),
+
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+
+                                    driveToIntake.build(),
+
+                                    new ParallelAction(
+                                            launcher.PickUp(),
+                                            driveWhileIntake.build()
+                                    ),
+
+                                    reverseToLaunch.build(),
+
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
+
+                                    driveAway.build()
+                            )
+                    )
+            );
+        }
+
+        else {
+            Actions.runBlocking(
+                    new ParallelAction(
+                            goalAlign.build(),
+                            new SequentialAction(
+                                    launcher.SpinUp(),
+
+                                    launcher.SetTargetVelocity(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
+                                    launcher.Intake(),
+                                    launcher.LaunchRight(),
+
+                                    turnToExit.build(),
+                                    driveAway.build()
+                            )
+                    )
+            );
+        }
     }
 }
