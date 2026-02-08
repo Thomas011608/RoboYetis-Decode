@@ -339,7 +339,7 @@ public class CloseLaunchPathing extends LinearOpMode {
         backTimer.reset();
         intakeTimer.reset();
 
-        //Create Trajectories to build later
+        //HEADER: Create Trajectories to build later
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
                 .lineToX(-24,new TranslationalVelConstraint(80));
         currentPose = new Pose2d(-24, 24, Math.toRadians(135));
@@ -364,7 +364,7 @@ public class CloseLaunchPathing extends LinearOpMode {
         currentPose = new Pose2d(12, 36,Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntakeTwo = drive.actionBuilder(currentPose)
-                .lineToY(74, new TranslationalVelConstraint(12.5));
+                .lineToY(74, new TranslationalVelConstraint(17.5));
         currentPose = new Pose2d(12, 74, Math.PI/2);
 
         TrajectoryActionBuilder reverseToLaunchTwo = drive.actionBuilder(currentPose)

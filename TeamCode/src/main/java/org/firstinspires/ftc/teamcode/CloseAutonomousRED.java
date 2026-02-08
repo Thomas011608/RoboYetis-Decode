@@ -34,7 +34,7 @@ public class CloseAutonomousRED extends LinearOpMode {
     //Define final variables
     final double STOP_SPEED = 0.0;
     final double MAX_SPEED = 1.0;
-    final double FEED_TIME_SECONDS = 1.5;
+    final double FEED_TIME_SECONDS = 0.3;
     final double INTAKE_TIME_SECONDS = 0.3;
     final double INTAKE_IN_TIME_SECONDS = 3.5;
 
@@ -49,6 +49,7 @@ public class CloseAutonomousRED extends LinearOpMode {
     public class Camera {
         //Initialize Camera
         private HuskyLens huskyLens;
+
         public Camera(HardwareMap hardwareMap) {
             huskyLens = hardwareMap.get(HuskyLens.class, "camera");
             if (!huskyLens.knock()) {
@@ -69,72 +70,9 @@ public class CloseAutonomousRED extends LinearOpMode {
                 return false;
             }
         }
+
         public Action GetObeliskID() {
             return new GetObeliskID();
-        }
-
-        //Set the distance and power variables when the AprilTag detected has ID 4
-        public class GetPowerRed implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                HuskyLens.Block[] blocks = huskyLens.blocks();
-                for (HuskyLens.Block block : blocks) {
-                    if (block.id == 4) {
-                        //Custom distance function
-                        double area = block.width * block.height;
-                        distance = Math.pow((area / 16139259.8), (1 / -1.89076));
-                    } else {
-                        distance = -1;
-                    }
-                }
-
-                //Custom power function
-                if (distance < 130 && distance != -1) {
-                    power = 1300;
-                } else if (distance > 240) {
-                    power = 1475;
-                } else if (distance != -1){
-                    power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
-                } else {
-                    power = -1;
-                }
-                return (power == -1);
-            }
-        }
-        public Action GetPowerRed() {
-            return new GetPowerRed();
-        }
-
-        //Set the distance and power variables when the AprilTag detected has ID 5
-        public class GetPowerBlue implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                HuskyLens.Block[] blocks = huskyLens.blocks();
-                for (HuskyLens.Block block : blocks) {
-                    if (block.id == 5) {
-                        //Custom distance function
-                        double area = block.width * block.height;
-                        distance = Math.pow((area / 16139259.8), (1 / -1.89076));
-                    } else {
-                        distance = -1;
-                    }
-                }
-
-                //Custom power function
-                if (distance < 130 && distance != -1) {
-                    power = 1300;
-                } else if (distance > 240) {
-                    power = 1475;
-                } else if (distance != -1){
-                    power = 0.0360562 * (Math.pow(distance, 2)) - 11.25698 * distance + 2092.27902;
-                } else {
-                    power = -1;
-                }
-                return power == -1;
-            }
-        }
-        public Action GetPowerBlue() {
-            return new GetPowerBlue();
         }
     }
 
@@ -188,7 +126,7 @@ public class CloseAutonomousRED extends LinearOpMode {
 
         public class SetTargetVelocity implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
-                power = 1450;
+                power = 1275;
                 double minPower = power - 50;
                 double maxPower = power + 50;
 
@@ -339,22 +277,42 @@ public class CloseAutonomousRED extends LinearOpMode {
         backTimer.reset();
         intakeTimer.reset();
 
-        //Create Trajectories to build later
+        while (!isStopRequested() && !opModeIsActive()) {
+            Actions.runBlocking(camera.GetObeliskID());
+            telemetry.addData("ID", ID);
+            telemetry.update();
+        }
+        //HEADER: Create Trajectories to build later
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
-                .lineToX(-24);
+                .lineToX(-24, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(-24, 24, Math.toRadians(135));
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
-                .turnTo(Math.PI/2)
-                .splineToConstantHeading(new Vector2d(-12, 36),Math.PI/2);
-        currentPose = new Pose2d(-12, 36, Math.PI/2);
+                .turnTo(Math.PI / 2)
+                .splineToConstantHeading(new Vector2d(-12, 40), Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-12, 40, Math.PI / 2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(50, new TranslationalVelConstraint(12.5));
-        currentPose = new Pose2d(-12, 50, Math.PI/2);
+                .lineToY(62, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(-12, 62, Math.PI / 2);
 
         TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                .splineToSplineHeading(new Pose2d(-24,24,Math.toRadians(135)),0);
+                .lineToY(48)
+                .splineToLinearHeading(new Pose2d(-24, 24, Math.toRadians(135)), Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-24, 24, Math.toRadians(135));
+
+        TrajectoryActionBuilder driveToIntakeTwo = drive.actionBuilder(currentPose)
+                .turnTo(Math.PI / 2)
+                .splineToConstantHeading(new Vector2d(12, 40), Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(12, 36, Math.PI / 2);
+
+        TrajectoryActionBuilder driveWhileIntakeTwo = drive.actionBuilder(currentPose)
+                .lineToY(72, new TranslationalVelConstraint(17.5));
+        currentPose = new Pose2d(12, 72, Math.PI / 2);
+
+        TrajectoryActionBuilder reverseToLaunchTwo = drive.actionBuilder(currentPose)
+                .lineToY(48)
+                .splineToLinearHeading(new Pose2d(-24, 24, Math.toRadians(135)), Math.PI / 2, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(-24, 24, Math.toRadians(135));
 
         /*TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
@@ -365,186 +323,58 @@ public class CloseAutonomousRED extends LinearOpMode {
         */
         TrajectoryActionBuilder driveAway = drive.actionBuilder(currentPose)
                 .turnTo(Math.toRadians(45))
-                .lineToX(0);
-
-
-        while (!isStopRequested() && !opModeIsActive()) {
-            Actions.runBlocking(camera.GetObeliskID());
-            telemetry.addData("ID", ID);
-            telemetry.update();
-        }
+                .lineToX(0, new TranslationalVelConstraint(80));
 
         waitForStart();
         if (isStopRequested()) return;
 
+        Actions.runBlocking(
+                new ParallelAction(
+                        goalAlign.build(),
+                        new SequentialAction(
+                                launcher.SpinUp(),
 
-        //HEADER: GPP
-        if (ID == 1){
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            launcher.SpinUp(),
+                                launcher.SetTargetVelocity(),
+                                launcher.LaunchLeft(),
+                                launcher.LaunchRight(),
+                                launcher.Intake(),
+                                launcher.LaunchRight(),
 
-                            new SequentialAction(
-                                    //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerRed(),
-                                    launcher.Wait(),
-                                    launcher.SetTargetVelocity(),
+                                driveToIntake.build(),
 
-                                    //Green
-                                    launcher.LaunchLeft(),
+                                new ParallelAction(
+                                        launcher.PickUp(),
+                                        driveWhileIntake.build()
+                                ),
 
-                                    //Purple 1
-                                    launcher.LaunchRight(),
+                                reverseToLaunch.build(),
 
-                                    //Purple 2
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.SpinDown(),
+                                launcher.SetTargetVelocity(),
+                                launcher.LaunchLeft(),
+                                launcher.LaunchRight(),
+                                launcher.Intake(),
+                                launcher.LaunchRight(),
+                                launcher.LaunchLeft(),
 
-                                    //Move toward the intake & Collect balls
-                                    driveToIntake.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
+                                driveToIntakeTwo.build(),
 
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            //moveToLaunch.build(),
-                                            reverseToLaunch.build(),
-                                            launcher.SpinUp(),
-                                            launcher.FeedBack()
-                                    ),
+                                new ParallelAction(
+                                        launcher.PickUp(),
+                                        driveWhileIntakeTwo.build()
+                                ),
 
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
+                                reverseToLaunchTwo.build(),
 
-                                    //Move out of launch zone
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
+                                launcher.SetTargetVelocity(),
+                                launcher.LaunchLeft(),
+                                launcher.LaunchRight(),
+                                launcher.Intake(),
+                                launcher.LaunchRight(),
+                                launcher.LaunchLeft(),
 
-        //HEADER: PGP
-        else if (ID == 2){
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            launcher.SpinUp(),
-
-                            new SequentialAction(
-                                    //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerRed(),
-                                    launcher.Wait(),
-                                    launcher.SetTargetVelocity(),
-
-                                    //Purple 1
-                                    launcher.LaunchRight(),
-
-                                    //Green
-                                    launcher.LaunchLeft(),
-
-                                    //Purple 2
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.SpinDown(),
-
-                                    //Move toward the intake & Collect balls
-                                    driveToIntake.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
-
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            //moveToLaunch.build(),
-                                            reverseToLaunch.build(),
-                                            launcher.SpinUp()
-                                    ),
-
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
-
-                                    //Move out of launch zone
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
-
-        //HEADER: PPG
-        else {
-            Actions.runBlocking(
-                    new ParallelAction(
-                            //Turn and spin up
-                            goalAlign.build(),
-                            launcher.SpinUp(),
-
-                            new SequentialAction(
-                                    //Set spin velocity, launch in the correct order
-                                    //camera.GetPowerRed(),
-                                    launcher.Wait(),
-                                    launcher.SetTargetVelocity(),
-
-                                    //Purple 1
-                                    launcher.LaunchRight(),
-
-                                    //Purple 2
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-
-                                    //Green
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
-
-                                    //Move toward the intake & Collect balls
-                                    driveToIntake.build(),
-                                    new ParallelAction (
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
-
-                                    //Move back and spin up
-                                    new ParallelAction(
-                                            //moveToLaunch.build(),
-                                            reverseToLaunch.build(),
-                                            launcher.SpinUp()
-                                    ),
-
-                                    //Set the velocity and launch
-                                    //camera.GetPowerRed(),
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-                                    launcher.SpinDown(),
-
-                                    //Move out of launch zone
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
-
+                                driveAway.build()
+                        )
+                )
+        );
     }
 }
