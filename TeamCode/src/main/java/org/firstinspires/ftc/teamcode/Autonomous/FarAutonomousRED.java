@@ -367,7 +367,7 @@ public class FarAutonomousRED extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        int spikeNumber = -1;
+        int spikeNumber = 2;
         Pose2d currentPose = new Pose2d(63, 12, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
         Launcher launcher = new Launcher(hardwareMap);
@@ -420,11 +420,11 @@ public class FarAutonomousRED extends LinearOpMode {
 
         while (!isStopRequested() && !opModeIsActive()) {
             Actions.runBlocking(camera.GetObeliskID());
-            if (gamepad1.dpadUpWasPressed()){
-                spikeNumber = 1;
-            }
             if (gamepad1.dpadLeftWasPressed()) {
                 spikeNumber = 0;
+            }
+            if (gamepad1.dpadUpWasPressed()){
+                spikeNumber = 1;
             }
             if (gamepad1.dpadRightWasPressed()) {
                 spikeNumber = 2;
