@@ -393,7 +393,7 @@ public class FarAutonomousRED extends LinearOpMode {
         currentPose = new Pose2d(31, 36, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(72, new TranslationalVelConstraint(12.5));
+                .lineToY(72, new TranslationalVelConstraint(18));
         currentPose = new Pose2d(31, 72, Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
@@ -407,7 +407,7 @@ public class FarAutonomousRED extends LinearOpMode {
         currentPose = new Pose2d(6, 36, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake2 = drive.actionBuilder(currentPose)
-                .lineToY(72, new TranslationalVelConstraint(12.5));
+                .lineToY(72, new TranslationalVelConstraint(18));
         currentPose = new Pose2d(6, 72, Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch2 = drive.actionBuilder(currentPose)
@@ -417,7 +417,7 @@ public class FarAutonomousRED extends LinearOpMode {
 
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .lineToX(24, new TranslationalVelConstraint(70));
+                .lineToX(24, new TranslationalVelConstraint(80));
 
 
         while (!isStopRequested() && !opModeIsActive()) {
@@ -440,8 +440,8 @@ public class FarAutonomousRED extends LinearOpMode {
         if (isStopRequested()) return;
 
 
-        //HEADER: GPP
-        if (ID == 1){
+        //HEADER: PPG
+        if (ID == 3){
             if (spikeNumber == 0) {
                 Actions.runBlocking(
                         new ParallelAction(
@@ -455,14 +455,13 @@ public class FarAutonomousRED extends LinearOpMode {
 
                                         //Launch 1 Round 1
                                         launcher.LaunchRight(),
-                                        launcher.LaunchLeft(),
 
                                         //Intake
                                         launcher.Intake(),
 
                                         //Launch 1 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Drive to the first spike marker and intake the balls
                                         driveToIntake.build(),
@@ -482,14 +481,13 @@ public class FarAutonomousRED extends LinearOpMode {
 
                                         //Launch 2 Round 1
                                         launcher.LaunchRight(),
-                                        launcher.LaunchLeft(),
 
                                         //Intake
                                         launcher.Intake(),
 
                                         //Launch 2 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Drive to the second spike marker and intake the balls
                                         driveToIntake2.build(),
@@ -508,7 +506,6 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.SetTargetVelocity(),
 
                                         //Launch 3 Round 1
-                                        launcher.LaunchRight(),
                                         launcher.LaunchLeft(),
 
                                         //Intake
@@ -540,14 +537,13 @@ public class FarAutonomousRED extends LinearOpMode {
 
                                         //Launch 1 Round 1
                                         launcher.LaunchRight(),
-                                        launcher.LaunchLeft(),
 
                                         //Intake
                                         launcher.Intake(),
 
                                         //Launch 1 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Drive to the first spike marker and intake the balls
                                         driveToIntake.build(),
@@ -567,14 +563,13 @@ public class FarAutonomousRED extends LinearOpMode {
 
                                         //Launch 2 Round 1
                                         launcher.LaunchRight(),
-                                        launcher.LaunchLeft(),
 
                                         //Intake
                                         launcher.Intake(),
 
                                         //Launch 2 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Spin Down
                                         launcher.SpinDown(),
@@ -597,14 +592,13 @@ public class FarAutonomousRED extends LinearOpMode {
 
                                         //Launch 1 Round 1
                                         launcher.LaunchRight(),
-                                        launcher.LaunchLeft(),
 
                                         //Intake
                                         launcher.Intake(),
 
                                         //Launch 1 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Spin Down
                                         launcher.SpinDown(),
@@ -638,8 +632,9 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.Intake(),
 
                                         //Launch 1 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
+
 
                                         //Drive to the first spike marker and intake the balls
                                         driveToIntake.build(),
@@ -665,8 +660,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.Intake(),
 
                                         //Launch 2 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Drive to the second spike marker and intake the balls
                                         driveToIntake2.build(),
@@ -685,8 +680,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.SetTargetVelocity(),
 
                                         //Launch 3 Round 1
-                                        launcher.LaunchRight(),
                                         launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
                                         //Intake
                                         launcher.Intake(),
@@ -723,8 +718,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.Intake(),
 
                                         //Launch 1 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Drive to the first spike marker and intake the balls
                                         driveToIntake.build(),
@@ -750,8 +745,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.Intake(),
 
                                         //Launch 2 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Spin Down
                                         launcher.SpinDown(),
@@ -780,8 +775,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.Intake(),
 
                                         //Launch 1 Round 2
-                                        launcher.LaunchLeft(),
                                         launcher.LaunchRight(),
+                                        launcher.LaunchLeft(),
 
                                         //Spin Down
                                         launcher.SpinDown(),
@@ -794,7 +789,7 @@ public class FarAutonomousRED extends LinearOpMode {
             }
         }
 
-        //HEADER: PPG
+        //HEADER: GPP
         else {
             if (spikeNumber == 0) {
                 Actions.runBlocking(
@@ -808,8 +803,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.SetTargetVelocity(),
 
                                         //Launch 1 Round 1
-                                        launcher.LaunchRight(),
                                         launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
                                         //Intake
                                         launcher.Intake(),
@@ -835,8 +830,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.SetTargetVelocity(),
 
                                         //Launch 2 Round 1
-                                        launcher.LaunchRight(),
                                         launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
                                         //Intake
                                         launcher.Intake(),
@@ -893,8 +888,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.SetTargetVelocity(),
 
                                         //Launch 1 Round 1
-                                        launcher.LaunchRight(),
                                         launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
                                         //Intake
                                         launcher.Intake(),
@@ -920,8 +915,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.SetTargetVelocity(),
 
                                         //Launch 2 Round 1
-                                        launcher.LaunchRight(),
                                         launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
                                         //Intake
                                         launcher.Intake(),
@@ -950,8 +945,8 @@ public class FarAutonomousRED extends LinearOpMode {
                                         launcher.SetTargetVelocity(),
 
                                         //Launch 1 Round 1
-                                        launcher.LaunchRight(),
                                         launcher.LaunchLeft(),
+                                        launcher.LaunchRight(),
 
                                         //Intake
                                         launcher.Intake(),
