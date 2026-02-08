@@ -36,9 +36,9 @@ public class FarAutonomousRED extends LinearOpMode {
     //Define final variables
     final double STOP_SPEED = 0.0;
     final double MAX_SPEED = 1.0;
-    final double FEED_TIME_SECONDS = 0.5;
+    final double FEED_TIME_SECONDS = 0.3;
     final double INTAKE_TIME_SECONDS = 0.3;
-    final double INTAKE_IN_TIME_SECONDS = 2.0;
+    final double INTAKE_IN_TIME_SECONDS = 3;
 
     //Define timers
     ElapsedTime rightFeederTimer = new ElapsedTime();
@@ -228,7 +228,7 @@ public class FarAutonomousRED extends LinearOpMode {
 
         public class SetTargetVelocity implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
-                power = 1450;
+                power = 1475;
                 double minPower = power - 50;
                 double maxPower = power + 50;
 
@@ -388,12 +388,12 @@ public class FarAutonomousRED extends LinearOpMode {
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(32, 36),Math.PI/2, new TranslationalVelConstraint(50));
-        currentPose = new Pose2d(32, 36, Math.PI/2);
+                .splineTo(new Vector2d(31, 36),Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(31, 36, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(60, new TranslationalVelConstraint(12.5));
-        currentPose = new Pose2d(32, 60, Math.PI/2);
+                .lineToY(72, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(31, 72, Math.PI/2);
 
         TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
                 //.lineToY(36)
@@ -406,26 +406,26 @@ public class FarAutonomousRED extends LinearOpMode {
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
                 .setTangent(0)
-                .splineToLinearHeading(new Pose2d(56, 12, GOAL_ANGLE_RAD), Math.PI/2, new TranslationalVelConstraint(50));
+                .splineToLinearHeading(new Pose2d(56, 12, GOAL_ANGLE_RAD), Math.PI/2, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(56, 12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake2 = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(6, 36),Math.PI/2, new TranslationalVelConstraint(50));
+                .splineTo(new Vector2d(6, 36),Math.PI/2, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(6, 36, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake2 = drive.actionBuilder(currentPose)
-                .lineToY(60, new TranslationalVelConstraint(12.5));
-        currentPose = new Pose2d(6, 60, Math.PI/2);
+                .lineToY(72, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(6, 72, Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch2 = drive.actionBuilder(currentPose)
                 .setTangent(0)
-                .splineToLinearHeading(new Pose2d(56, 12, GOAL_ANGLE_RAD), Math.PI/2, new TranslationalVelConstraint(50));
-        currentPose = new Pose2d(56, 12, GOAL_ANGLE_RAD);
+                .splineToLinearHeading(new Pose2d(54, 12, GOAL_ANGLE_RAD), Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(54, 12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .lineToX(24, new TranslationalVelConstraint(50));
+                .lineToX(24, new TranslationalVelConstraint(70));
 
 
         while (!isStopRequested() && !opModeIsActive()) {
@@ -569,11 +569,12 @@ public class FarAutonomousRED extends LinearOpMode {
                                     launcher.LaunchRight(),
 
                                     //Purple 2
+                                    launcher.LaunchLeft(),
                                     launcher.Intake(),
-                                    launcher.LaunchRight(),
+                                    launcher.LaunchLeft(),
 
                                     //Green
-                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
                                     //launcher.SpinDown(),
 
                                     //Move toward the intake & Collect balls
@@ -594,9 +595,10 @@ public class FarAutonomousRED extends LinearOpMode {
                                     //camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
                                     launcher.LaunchLeft(),
+                                    launcher.Intake(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
                                     //launcher.SpinDown(),
 
                                     driveToIntake2.build(),
@@ -616,9 +618,10 @@ public class FarAutonomousRED extends LinearOpMode {
                                     //camera.GetPowerRed(),
                                     launcher.SetTargetVelocity(),
                                     launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
                                     launcher.LaunchLeft(),
+                                    launcher.Intake(),
+                                    launcher.LaunchLeft(),
+                                    launcher.LaunchRight(),
                                     launcher.SpinDown(),
 
                                     //Move out of launch zone
