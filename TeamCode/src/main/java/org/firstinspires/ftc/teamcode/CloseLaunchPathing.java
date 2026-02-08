@@ -350,11 +350,11 @@ public class CloseLaunchPathing extends LinearOpMode {
         currentPose = new Pose2d(-12, 36, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(50, new TranslationalVelConstraint(12.5));
-        currentPose = new Pose2d(-12, 50, Math.PI/2);
+                .lineToY(55, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(-12, 54, Math.PI/2);
 
         TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                .splineToSplineHeading(new Pose2d(-24,24,Math.toRadians(135)),0);
+                .splineToLinearHeading(new Pose2d(-24,24,Math.toRadians(135)),Math.PI/2);
         currentPose = new Pose2d(-24, 24, Math.toRadians(135));
 
         /*TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
