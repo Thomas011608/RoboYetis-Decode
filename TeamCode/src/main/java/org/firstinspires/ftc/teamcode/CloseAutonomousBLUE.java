@@ -23,8 +23,8 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Config
-@Autonomous(name = "CloseAutonomousRED", group = "Competition")
-public class CloseAutonomousRED extends LinearOpMode {
+@Autonomous(name = "CloseAutonomousBLUE", group = "Competition")
+public class CloseAutonomousBLUE extends LinearOpMode {
     //HEADER: Define Variables
     int ID = 0;
     double distance = -1;
