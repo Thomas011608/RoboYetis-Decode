@@ -37,7 +37,7 @@ public class  CompetitionTeleOp extends LinearOpMode {
 
     // HEADER: Defining final variables
     final int POSITION_ALIGNMENT_PIXELS = 15; // The range (+- this amount) of pixels the tag can be when aligned with the goal.
-    final double FEED_TIME_SECONDS = 0.5; //The feedes run trhis long when a shot is requested.
+    final double FEED_TIME_SECONDS = 0.5; //The feeders run this long when a shot is requested.
     final double INTAKE_TIMER = 2.0;
     final double MAX_SPEED = 1.0; //We send this power to the servos when we want them to stop.
     final double MAX_SPEED_REVERSE = -1.0;

@@ -357,6 +357,15 @@ public class CloseLaunchPathing extends LinearOpMode {
                 .splineToLinearHeading(new Pose2d(-24,24,Math.toRadians(135)),Math.PI/2);
         currentPose = new Pose2d(-24, 24, Math.toRadians(135));
 
+        TrajectoryActionBuilder driveToIntakeTwo = drive.actionBuilder(currentPose)
+                .turnTo(Math.PI/2)
+                .splineToConstantHeading(new Vector2d(12,36), Math.PI/2);
+        currentPose = new Pose2d(12, 36,Math.PI/2);
+
+        TrajectoryActionBuilder reverseToLaunchTwo = drive.actionBuilder(currentPose)
+                .splineToLinearHeading(new Pose2d(-24,24,Math.toRadians(135)),Math.PI/2);
+        currentPose = new Pose2d(-24, 24, Math.toRadians(135));
+
         /*TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
                 .setTangent(Math.PI)
                 .splineTo(new Vector2d(58, 12), 0)
@@ -371,20 +380,22 @@ public class CloseLaunchPathing extends LinearOpMode {
         if (isStopRequested()) return;
 
         Actions.runBlocking(
-                new ParallelAction(
-                        //Turn and spin up
+                new SequentialAction(
                         goalAlign.build(),
-                        new SequentialAction(
-                                launcher.Wait(),
-                                driveToIntake.build(),
-                                launcher.Wait(),
-                                driveWhileIntake.build(),
-                                launcher.Wait(),
-                                reverseToLaunch.build(),
-                                launcher.Wait(),
-                                driveAway.build()
-                        )
-                )
+                        launcher.Wait(),
+                        driveToIntake.build(),
+                        launcher.Wait(),
+                        driveWhileIntake.build(),
+                        launcher.Wait(),
+                        reverseToLaunch.build(),
+                        launcher.Wait(),
+                        driveToIntakeTwo.build(),
+                        launcher.Wait(),
+                        driveWhileIntake.build(),
+                        launcher.Wait(),
+                        reverseToLaunchTwo.build(),
+                        driveAway.build()
+            )
         );
 
     }
