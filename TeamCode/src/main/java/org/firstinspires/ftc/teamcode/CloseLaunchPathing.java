@@ -341,29 +341,35 @@ public class CloseLaunchPathing extends LinearOpMode {
 
         //Create Trajectories to build later
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
-                .lineToX(-24);
+                .lineToX(-24,new TranslationalVelConstraint(80));
         currentPose = new Pose2d(-24, 24, Math.toRadians(135));
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI/2)
-                .splineToConstantHeading(new Vector2d(-12, 36),Math.PI/2);
-        currentPose = new Pose2d(-12, 36, Math.PI/2);
+                .splineToConstantHeading(new Vector2d(-12, 40),Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-12, 40, Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(55, new TranslationalVelConstraint(12.5));
-        currentPose = new Pose2d(-12, 54, Math.PI/2);
+                .lineToY(58, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(-12, 58, Math.PI/2);
 
         TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                .splineToLinearHeading(new Pose2d(-24,24,Math.toRadians(135)),Math.PI/2);
+                .lineToY(48)
+                .splineToLinearHeading(new Pose2d(-24,24,Math.toRadians(135)),Math.PI/2, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(-24, 24, Math.toRadians(135));
 
         TrajectoryActionBuilder driveToIntakeTwo = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI/2)
-                .splineToConstantHeading(new Vector2d(12,36), Math.PI/2);
+                .splineToConstantHeading(new Vector2d(12,40), Math.PI/2, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(12, 36,Math.PI/2);
 
+        TrajectoryActionBuilder driveWhileIntakeTwo = drive.actionBuilder(currentPose)
+                .lineToY(74, new TranslationalVelConstraint(12.5));
+        currentPose = new Pose2d(12, 74, Math.PI/2);
+
         TrajectoryActionBuilder reverseToLaunchTwo = drive.actionBuilder(currentPose)
-                .splineToLinearHeading(new Pose2d(-24,24,Math.toRadians(135)),Math.PI/2);
+                .lineToY(48)
+                .splineToLinearHeading(new Pose2d(-24,24,Math.toRadians(135)),Math.PI/2, new TranslationalVelConstraint(80));
         currentPose = new Pose2d(-24, 24, Math.toRadians(135));
 
         /*TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
@@ -374,7 +380,7 @@ public class CloseLaunchPathing extends LinearOpMode {
         */
         TrajectoryActionBuilder driveAway = drive.actionBuilder(currentPose)
                 .turnTo(Math.toRadians(45))
-                .lineToX(0);
+                .lineToX(0, new TranslationalVelConstraint(80));
 
         waitForStart();
         if (isStopRequested()) return;
@@ -391,7 +397,7 @@ public class CloseLaunchPathing extends LinearOpMode {
                         launcher.Wait(),
                         driveToIntakeTwo.build(),
                         launcher.Wait(),
-                        driveWhileIntake.build(),
+                        driveWhileIntakeTwo.build(),
                         launcher.Wait(),
                         reverseToLaunchTwo.build(),
                         driveAway.build()
