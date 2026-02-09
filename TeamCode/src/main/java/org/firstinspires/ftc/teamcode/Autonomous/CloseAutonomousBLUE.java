@@ -42,6 +42,15 @@ public class CloseAutonomousBLUE extends LinearOpMode {
     final double INTAKE_SPEED_TWO = 20;
     final double LAUNCH_POWER = 1225;
 
+    final double GOAL_ANGLE_X_OFFSET = -3.064319580558717;
+    final double GOAL_ANGLE_Y_OFFSET = -2.872335178645577;
+    final double ONE_EIGHTY_X_OFFSET = 0.20069208670788863;
+    final double ONE_EIGHTY_Y_OFFSET = -16.840766245924584;
+    final double MINUS_NINETY_X_OFFSET = -6.492558877299151;
+    final double MINUS_NINETY_Y_OFFSET = -15.15233317698081;
+    final double X_OFFSET = 0;
+    final double Y_OFFSET = 0;
+
     //Define timers
     ElapsedTime rightFeederTimer = new ElapsedTime();
     ElapsedTime leftFeederTimer = new ElapsedTime();
@@ -283,32 +292,33 @@ public class CloseAutonomousBLUE extends LinearOpMode {
 
         //HEADER: Create Trajectories to build later
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
-                .lineToX(-24, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-24, -24, Math.toRadians(-135));
+                .lineToX(-24+X_OFFSET, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-24+X_OFFSET, -24, Math.toRadians(-135));
 
         TrajectoryActionBuilder turnToExit = drive.actionBuilder(currentPose)
                 .turnTo(GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(-Math.PI / 2)
-                .splineToConstantHeading(new Vector2d(-14, -40), -Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-14, -40, -Math.PI / 2);
+                .splineToConstantHeading(new Vector2d(-14+X_OFFSET, -40+Y_OFFSET), -Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-14+X_OFFSET, -40+Y_OFFSET, -Math.PI / 2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(-66, new TranslationalVelConstraint(INTAKE_SPEED_ONE));
-        currentPose = new Pose2d(-14, -66, -Math.PI / 2);
+                .lineToY(-66+Y_OFFSET, new TranslationalVelConstraint(INTAKE_SPEED_ONE));
+        currentPose = new Pose2d(-14+X_OFFSET, -66+Y_OFFSET, -Math.PI / 2);
 
         TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                .lineToY(-48)
-                .splineToLinearHeading(new Pose2d(-24, -24, GOAL_ANGLE_RAD), -Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(-24, -24, GOAL_ANGLE_RAD);
+                .lineToY(-48+Y_OFFSET)
+                .splineToLinearHeading(new Pose2d(-24+X_OFFSET, -24+Y_OFFSET, GOAL_ANGLE_RAD), -Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(-24+X_OFFSET, -24+Y_OFFSET, GOAL_ANGLE_RAD);
+
         TrajectoryActionBuilder driveToIntakeTwo = drive.actionBuilder(currentPose)
                 .turnTo(-Math.PI / 2)
-                .splineToConstantHeading(new Vector2d(10, -40), -Math.PI / 2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(10, -36, -Math.PI / 2);
+                .splineToConstantHeading(new Vector2d(10+X_OFFSET, -40+Y_OFFSET), -Math.PI / 2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(10+X_OFFSET, -36+Y_OFFSET, -Math.PI / 2);
 
         TrajectoryActionBuilder driveWhileIntakeTwo = drive.actionBuilder(currentPose)
-                .lineToY(-74, new TranslationalVelConstraint(INTAKE_SPEED_TWO));
+                .lineToY(-74+Y_OFFSET, new TranslationalVelConstraint(INTAKE_SPEED_TWO));
         currentPose = new Pose2d(10, -74, -Math.PI / 2);
 
         TrajectoryActionBuilder reverseToLaunchTwo = drive.actionBuilder(currentPose)
