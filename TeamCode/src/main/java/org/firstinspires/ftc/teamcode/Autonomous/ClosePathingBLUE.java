@@ -23,8 +23,8 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Config
-@Autonomous(name = "CloseAutonomousRED", group = "Competition")
-public class CloseAutonomousRED extends LinearOpMode {
+@Autonomous(name = "ClosePathingBLUE", group = "Test")
+public class ClosePathingBLUE extends LinearOpMode {
     //HEADER: Define Variables
     int ID = 0;
     double distance = -1;
@@ -80,6 +80,7 @@ public class CloseAutonomousRED extends LinearOpMode {
         }
     }
 
+    //HEADER: Launcher Class
     public class Launcher {
         private DcMotorEx launcher;
         private DcMotor feedRight;
@@ -105,6 +106,8 @@ public class CloseAutonomousRED extends LinearOpMode {
             intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             intake.setDirection(DcMotorSimple.Direction.FORWARD);
         }
+
+        //HEADER: Wait Class
         public class Wait implements Action {
             boolean initialized = false;
             public boolean run(@NonNull TelemetryPacket packet) {
@@ -118,6 +121,8 @@ public class CloseAutonomousRED extends LinearOpMode {
         public Action Wait(){
             return new Wait();
         }
+
+        //HEADER: SpinUp Class
         public class SpinUp implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
                 launcher.setVelocity(1350);
@@ -128,6 +133,7 @@ public class CloseAutonomousRED extends LinearOpMode {
             return new SpinUp();
         }
 
+        //HEADER: SetTargetVelocity Class
         public class SetTargetVelocity implements Action {
             public boolean run(@NonNull TelemetryPacket packet) {
                 power = LAUNCH_POWER;
@@ -139,11 +145,12 @@ public class CloseAutonomousRED extends LinearOpMode {
                 return !(launcher.getVelocity() <= maxPower) || !(launcher.getVelocity() >= minPower);
             }
         }
-
         public Action SetTargetVelocity() {
             return new SetTargetVelocity();
         }
 
+
+        //HEADER: SpinDown Class
         public class SpinDown implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
@@ -151,11 +158,11 @@ public class CloseAutonomousRED extends LinearOpMode {
                 return false;
             }
         }
-
         public Action SpinDown() {
             return new SpinDown();
         }
 
+        //HEADER: Intake Class
         public class Intake implements Action {
             boolean initialized = false;
             @Override
@@ -178,6 +185,7 @@ public class CloseAutonomousRED extends LinearOpMode {
             return new Intake();
         }
 
+        //HEADER: PickUp Class
         public class PickUp implements Action {
             boolean initialized = false;
             @Override
@@ -200,6 +208,7 @@ public class CloseAutonomousRED extends LinearOpMode {
             return new PickUp();
         }
 
+        //FeedBack Class
         public class FeedBack implements Action {
             boolean initialized = false;
             @Override
@@ -219,11 +228,11 @@ public class CloseAutonomousRED extends LinearOpMode {
                 }
             }
         }
-
         public Action FeedBack() {
             return new FeedBack();
         }
 
+        //HEADER: LaunchLeft Class
         public class LaunchLeft implements Action {
             boolean initialized = false;
             @Override
@@ -246,6 +255,7 @@ public class CloseAutonomousRED extends LinearOpMode {
             return new LaunchLeft();
         }
 
+        //HEADER: LaunchRight Class
         public class LaunchRight implements Action {
             boolean initialized = false;
             @Override
@@ -271,6 +281,7 @@ public class CloseAutonomousRED extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        //HEADER: Initialize OpMode
         Pose2d currentPose = new Pose2d(-54, 54, Math.toRadians(135));
         MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
         Launcher launcher = new Launcher(hardwareMap);
@@ -320,127 +331,34 @@ public class CloseAutonomousRED extends LinearOpMode {
                 .turnTo(Math.toRadians(45))
                 .lineToX(0, new TranslationalVelConstraint(80));
 
-        while (!isStopRequested() && !opModeIsActive()) {
-            if (gamepad1.dpadUpWasPressed()) {
-                spikeNumber = 1;
-            }
-            if (gamepad1.dpadLeftWasPressed()) {
-                spikeNumber = 0;
-            }
-            if (gamepad1.dpadRightWasPressed()) {
-                spikeNumber = 2;
-            }
-        }
-
         waitForStart();
         if (isStopRequested()) return;
 
-        //HEADER: 2 Spikes
-        if (spikeNumber == 2) {
-            Actions.runBlocking(
-                    new ParallelAction(
-                            goalAlign.build(),
-                            new SequentialAction(
-                                    launcher.SpinUp(),
+        //HEADER: Run Pathing
+        Actions.runBlocking(
+                new SequentialAction(
+                        //Launch 1
+                        goalAlign.build(),
+                        launcher.Wait(),
 
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
+                        //Launch 2
+                        driveToIntake.build(),
+                        launcher.Wait(),
+                        driveWhileIntake.build(),
+                        launcher.Wait(),
+                        reverseToLaunch.build(),
+                        launcher.Wait(),
 
-                                    driveToIntake.build(),
+                        //Launch 3
+                        driveToIntakeTwo.build(),
+                        launcher.Wait(),
+                        driveWhileIntakeTwo.build(),
+                        launcher.Wait(),
+                        reverseToLaunchTwo.build(),
 
-                                    new ParallelAction(
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
-
-                                    reverseToLaunch.build(),
-
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-
-                                    driveToIntakeTwo.build(),
-
-                                    new ParallelAction(
-                                            launcher.PickUp(),
-                                            driveWhileIntakeTwo.build()
-                                    ),
-
-                                    reverseToLaunchTwo.build(),
-
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
-
-        //HEADER: 1 Spike
-        else if (spikeNumber == 1) {
-            Actions.runBlocking(
-                    new ParallelAction(
-                            goalAlign.build(),
-                            new SequentialAction(
-                                    launcher.SpinUp(),
-
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-
-                                    driveToIntake.build(),
-
-                                    new ParallelAction(
-                                            launcher.PickUp(),
-                                            driveWhileIntake.build()
-                                    ),
-
-                                    reverseToLaunch.build(),
-
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-                                    launcher.LaunchLeft(),
-
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
-
-        else {
-            Actions.runBlocking(
-                    new ParallelAction(
-                            goalAlign.build(),
-                            new SequentialAction(
-                                    launcher.SpinUp(),
-
-                                    launcher.SetTargetVelocity(),
-                                    launcher.LaunchLeft(),
-                                    launcher.LaunchRight(),
-                                    launcher.Intake(),
-                                    launcher.LaunchRight(),
-
-                                    turnToExit.build(),
-                                    driveAway.build()
-                            )
-                    )
-            );
-        }
+                        launcher.Wait(),
+                        driveAway.build()
+                )
+        );
     }
 }
