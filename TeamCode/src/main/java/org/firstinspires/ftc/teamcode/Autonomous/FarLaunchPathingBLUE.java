@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Autonomous;
+
 import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
@@ -15,22 +17,22 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import org.firstinspires.ftc.teamcode.Autonomous.road_runner.MecanumDrive;
-
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.Autonomous.road_runner.MecanumDrive;
+
 @Config
-@Autonomous(name = "FarLaunchPathing", group = "Test")
-public class FarLaunchPathing extends LinearOpMode {
+@Autonomous(name = "FarAutonomousBLUE", group = "Competition")
+public class FarLaunchPathingBLUE extends LinearOpMode {
     //HEADER: Define Variables
     int ID = 0;
     double distance = -1;
     double power = -1;
     double X = -1;
-    double GOAL_ANGLE_RAD = Math.PI - 0.44;
+    double GOAL_ANGLE_RAD = Math.PI + 0.44 - 0.05;
 
     //Define final variables
     final double STOP_SPEED = 0.0;
@@ -38,6 +40,8 @@ public class FarLaunchPathing extends LinearOpMode {
     final double FEED_TIME_SECONDS = 1.5;
     final double INTAKE_TIME_SECONDS = 0.3;
     final double INTAKE_IN_TIME_SECONDS = 3.5;
+    final double X_OFFSET = 0;
+    final double Y_OFFSET = 0;
 
     //Define timers
     ElapsedTime rightFeederTimer = new ElapsedTime();
@@ -202,6 +206,12 @@ public class FarLaunchPathing extends LinearOpMode {
             intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             intake.setDirection(DcMotorSimple.Direction.FORWARD);
         }
+        public class SpinUp implements Action {
+            public boolean run(@NonNull TelemetryPacket packet) {
+                launcher.setVelocity(1350);
+                return launcher.getVelocity() == 0;
+            }
+        }
         public class Wait implements Action {
             boolean initialized = false;
             public boolean run(@NonNull TelemetryPacket packet) {
@@ -214,12 +224,6 @@ public class FarLaunchPathing extends LinearOpMode {
         }
         public Action Wait(){
             return new Wait();
-        }
-        public class SpinUp implements Action {
-            public boolean run(@NonNull TelemetryPacket packet) {
-                launcher.setVelocity(1350);
-                return launcher.getVelocity() == 0;
-            }
         }
         public Action SpinUp() {
             return new SpinUp();
@@ -368,10 +372,11 @@ public class FarLaunchPathing extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d currentPose = new Pose2d(63, 12, Math.toRadians(180));
+        int spikeNumber = -1;
+        Pose2d currentPose = new Pose2d(63, -12, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, currentPose);
-        Launcher launcher = new Launcher(hardwareMap);
-        Camera camera = new Camera(hardwareMap);
+        FarLaunchPathingBLUE.Launcher launcher = new FarLaunchPathingBLUE.Launcher(hardwareMap);
+        FarLaunchPathingBLUE.Camera camera = new FarLaunchPathingBLUE.Camera(hardwareMap);
 
 
         leftFeederTimer.reset();
@@ -383,52 +388,53 @@ public class FarLaunchPathing extends LinearOpMode {
         TrajectoryActionBuilder goalAlign = drive.actionBuilder(currentPose)
                 .lineToX(58)
                 .turnTo(GOAL_ANGLE_RAD);
-        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+        currentPose = new Pose2d(58, -12, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(30, 36),Math.PI/2);
-        currentPose = new Pose2d(30, 36, Math.PI/2);
+                .splineTo(new Vector2d(31+X_OFFSET, -36+Y_OFFSET),-Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(31+X_OFFSET, -36+Y_OFFSET, -Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(54, new TranslationalVelConstraint(12.5));
-        currentPose = new Pose2d(30, 54, Math.PI/2);
-
-        TrajectoryActionBuilder reverseToLaunch = drive.actionBuilder(currentPose)
-                //.lineToY(36)
-                //.splineTo(new Vector2d(58,12),Math.PI)
-                .lineToY(12)
-                .turnTo(Math.PI)
-                .lineToX(58)
-                .turnTo(GOAL_ANGLE_RAD);
-        //currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+                .lineToY(-72+Y_OFFSET, new TranslationalVelConstraint(18));
+        currentPose = new Pose2d(31+X_OFFSET, -72+Y_OFFSET, -Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
-                .setTangent(0)
-                .splineToLinearHeading(new Pose2d(58, 12, GOAL_ANGLE_RAD), Math.PI/2);
-        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+                .setTangent(Math.PI)
+                .splineToLinearHeading(new Pose2d(56+X_OFFSET, -12+Y_OFFSET, GOAL_ANGLE_RAD), -Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(56+X_OFFSET, -12+Y_OFFSET, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake2 = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(6, 36),Math.PI/2);
-        currentPose = new Pose2d(6, 36, Math.PI/2);
+                .splineTo(new Vector2d(6+X_OFFSET, -36+Y_OFFSET),-Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(6+X_OFFSET, -36+Y_OFFSET, -Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake2 = drive.actionBuilder(currentPose)
-                .lineToY(54, new TranslationalVelConstraint(12.5));
-        currentPose = new Pose2d(6, 54, Math.PI/2);
+                .lineToY(-72+Y_OFFSET, new TranslationalVelConstraint(18));
+        currentPose = new Pose2d(6+X_OFFSET, -72+Y_OFFSET, -Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch2 = drive.actionBuilder(currentPose)
-                .setTangent(0)
-                .splineToLinearHeading(new Pose2d(58, 12, GOAL_ANGLE_RAD), Math.PI/2);
-        currentPose = new Pose2d(58, 12, GOAL_ANGLE_RAD);
+                .setTangent(Math.PI)
+                .splineToLinearHeading(new Pose2d(54+X_OFFSET, -12+Y_OFFSET, GOAL_ANGLE_RAD), -Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(54+X_OFFSET, -12+Y_OFFSET, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .lineToX(24);
+                .lineToX(24+X_OFFSET, new TranslationalVelConstraint(80));
 
 
         while (!isStopRequested() && !opModeIsActive()) {
             Actions.runBlocking(camera.GetObeliskID());
+            if (gamepad1.dpadLeftWasPressed()) {
+                spikeNumber = 0;
+            }
+            if (gamepad1.dpadUpWasPressed()){
+                spikeNumber = 1;
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                spikeNumber = 2;
+            }
+            telemetry.addData("Number of spikes collected", spikeNumber);
             telemetry.addData("ID", ID);
             telemetry.update();
         }
@@ -436,7 +442,7 @@ public class FarLaunchPathing extends LinearOpMode {
         waitForStart();
         if (isStopRequested()) return;
 
-        //HEADER: Actually run the code
+
         Actions.runBlocking(
                 new ParallelAction(
                         //Turn and spin up
