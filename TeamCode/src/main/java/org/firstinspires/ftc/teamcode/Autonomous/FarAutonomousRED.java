@@ -440,7 +440,7 @@ public class FarAutonomousRED extends LinearOpMode {
 
         //HEADER: PPG
         if (ID == 3){
-            if (spikeNumber == 0) {
+            if (spikeNumber == 2) {
                 Actions.runBlocking(
                         new ParallelAction(
                                 //Turn and spin up
@@ -611,7 +611,7 @@ public class FarAutonomousRED extends LinearOpMode {
 
         //HEADER: PGP
         else if (ID == 2){
-            if (spikeNumber == 0) {
+            if (spikeNumber == 2) {
                 Actions.runBlocking(
                         new ParallelAction(
                                 //Turn and spin up
@@ -789,7 +789,7 @@ public class FarAutonomousRED extends LinearOpMode {
 
         //HEADER: GPP
         else {
-            if (spikeNumber == 0) {
+            if (spikeNumber == 2) {
                 Actions.runBlocking(
                         new ParallelAction(
                                 //Turn and spin up

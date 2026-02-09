@@ -38,6 +38,8 @@ public class FarAutonomousBLUE extends LinearOpMode {
     final double FEED_TIME_SECONDS = 1.5;
     final double INTAKE_TIME_SECONDS = 0.3;
     final double INTAKE_IN_TIME_SECONDS = 3.5;
+    final double X_OFFSET = 0;
+    final double Y_OFFSET = 0;
 
     //Define timers
     ElapsedTime rightFeederTimer = new ElapsedTime();
@@ -388,35 +390,35 @@ public class FarAutonomousBLUE extends LinearOpMode {
 
         TrajectoryActionBuilder driveToIntake = drive.actionBuilder(currentPose)
                 .turnTo(Math.PI)
-                .splineTo(new Vector2d(31, -36),-Math.PI/2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(31, -36, -Math.PI/2);
+                .splineTo(new Vector2d(31+X_OFFSET, -36+Y_OFFSET),-Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(31+X_OFFSET, -36+Y_OFFSET, -Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake = drive.actionBuilder(currentPose)
-                .lineToY(-72, new TranslationalVelConstraint(18));
-        currentPose = new Pose2d(31, -72, -Math.PI/2);
+                .lineToY(-72+Y_OFFSET, new TranslationalVelConstraint(18));
+        currentPose = new Pose2d(31+X_OFFSET, -72+Y_OFFSET, -Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch = drive.actionBuilder(currentPose)
-                .setTangent(0)
-                .splineToLinearHeading(new Pose2d(56, -12, GOAL_ANGLE_RAD), -Math.PI/2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(56, -12, GOAL_ANGLE_RAD);
+                .setTangent(Math.PI)
+                .splineToLinearHeading(new Pose2d(56+X_OFFSET, -12+Y_OFFSET, GOAL_ANGLE_RAD), -Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(56+X_OFFSET, -12+Y_OFFSET, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveToIntake2 = drive.actionBuilder(currentPose)
-                .turnTo(-Math.PI)
-                .splineTo(new Vector2d(6, -36),-Math.PI/2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(6, -36, -Math.PI/2);
+                .turnTo(Math.PI)
+                .splineTo(new Vector2d(6+X_OFFSET, -36+Y_OFFSET),-Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(6+X_OFFSET, -36+Y_OFFSET, -Math.PI/2);
 
         TrajectoryActionBuilder driveWhileIntake2 = drive.actionBuilder(currentPose)
-                .lineToY(-72, new TranslationalVelConstraint(18));
-        currentPose = new Pose2d(6, -72, -Math.PI/2);
+                .lineToY(-72+Y_OFFSET, new TranslationalVelConstraint(18));
+        currentPose = new Pose2d(6+X_OFFSET, -72+Y_OFFSET, -Math.PI/2);
 
         TrajectoryActionBuilder moveToLaunch2 = drive.actionBuilder(currentPose)
-                .setTangent(0)
-                .splineToLinearHeading(new Pose2d(54, -12, GOAL_ANGLE_RAD), -Math.PI/2, new TranslationalVelConstraint(80));
-        currentPose = new Pose2d(54, -12, GOAL_ANGLE_RAD);
+                .setTangent(Math.PI)
+                .splineToLinearHeading(new Pose2d(54+X_OFFSET, -12+Y_OFFSET, GOAL_ANGLE_RAD), -Math.PI/2, new TranslationalVelConstraint(80));
+        currentPose = new Pose2d(54+X_OFFSET, -12+Y_OFFSET, GOAL_ANGLE_RAD);
 
         TrajectoryActionBuilder driveForward = drive.actionBuilder(currentPose)
-                .turnTo(-Math.PI)
-                .lineToX(24, new TranslationalVelConstraint(80));
+                .turnTo(Math.PI)
+                .lineToX(24+X_OFFSET, new TranslationalVelConstraint(80));
 
 
         while (!isStopRequested() && !opModeIsActive()) {
@@ -441,7 +443,7 @@ public class FarAutonomousBLUE extends LinearOpMode {
 
         //HEADER: PPG
         if (ID == 3){
-            if (spikeNumber == 0) {
+            if (spikeNumber == 2) {
                 Actions.runBlocking(
                         new ParallelAction(
                                 //Turn and spin up
@@ -612,7 +614,7 @@ public class FarAutonomousBLUE extends LinearOpMode {
 
         //HEADER: PGP
         else if (ID == 2){
-            if (spikeNumber == 0) {
+            if (spikeNumber == 2) {
                 Actions.runBlocking(
                         new ParallelAction(
                                 //Turn and spin up
@@ -790,7 +792,7 @@ public class FarAutonomousBLUE extends LinearOpMode {
 
         //HEADER: GPP
         else {
-            if (spikeNumber == 0) {
+            if (spikeNumber == 2) {
                 Actions.runBlocking(
                         new ParallelAction(
                                 //Turn and spin up
